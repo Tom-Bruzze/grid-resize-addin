@@ -1,4 +1,4 @@
-/* ===== Grid Resize Tool – Enhanced JavaScript ===== */
+/* ===== Grid Resize Tool Enhanced JavaScript ===== */
 
 // Constants
 const CM_TO_POINTS = 28.3465;
@@ -114,6 +114,14 @@ function initUI() {
     });
     document.getElementById("propMatchMin").addEventListener("click", function () {
         proportionalMatch("min");
+    });
+
+    // === TAB 4: Extras buttons ===
+    document.getElementById("addShadow").addEventListener("click", function () {
+        applyShadow();
+    });
+    document.getElementById("removeShadow").addEventListener("click", function () {
+        removeShadow();
     });
 }
 
@@ -498,6 +506,122 @@ function proportionalMatch(mode) {
                             var modeText = mode === "max" ? "größten" : "kleinsten";
                             showStatus("Proportional auf Breite des " + modeText + " Objekts ✓", "success");
                         });
+                    });
+                });
+            }).catch(function (error) {
+                showStatus("Fehler: " + error.message, "error");
+            });
+        }
+    );
+}
+
+// ===================================================================
+// TAB 4: SHADOW - ADD SHADOW
+// ===================================================================
+// Shadow settings:
+//   Offset: unten rechts (bottom-right)
+//   Transparenz: 30% (=> alpha/opacity = 70% => 0.7)
+//   Größe: 100%
+//   Weichzeichnen (blur): 0.5 Pt.
+//   Winkel: 45°
+//   Abstand: 1 Pt.
+//   Farbe: Schwarz 50% => #808080 (50% between black and white)
+// ===================================================================
+function applyShadow() {
+    Office.context.document.getSelectedDataAsync(
+        Office.CoercionType.SlideRange,
+        function (asyncResult) {
+            if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                showStatus("Fehler: " + asyncResult.error.message, "error");
+                return;
+            }
+
+            PowerPoint.run(function (context) {
+                var shapes = context.presentation.getSelectedShapes();
+                shapes.load("items");
+
+                return context.sync().then(function () {
+                    if (shapes.items.length === 0) {
+                        showStatus("Bitte Objekt(e) auswählen!", "error");
+                        return;
+                    }
+
+                    // Shadow parameters
+                    // Winkel 45° + Abstand 1 Pt. => offset calculation:
+                    // offsetX = distance * cos(angle) = 1 * cos(45°) = 0.7071 Pt.
+                    // offsetY = distance * sin(angle) = 1 * sin(45°) = 0.7071 Pt.
+                    // "Offset unten rechts" => positive X and Y
+                    var angle = 45;
+                    var distance = 1; // 1 Pt.
+                    var blur = 0.5;   // 0.5 Pt.
+                    var transparency = 0.30; // 30%
+                    // Schwarz 50% = #808080
+                    var shadowColor = "#808080";
+
+                    var promises = shapes.items.map(function (shape) {
+                        shape.load("shadow");
+                        return context.sync().then(function () {
+                            var shadow = shape.shadow;
+
+                            // Set shadow properties
+                            shadow.visible = true;
+                            shadow.color = shadowColor;
+                            shadow.transparency = transparency;
+                            shadow.blur = blur;
+                            shadow.angle = angle;
+                            shadow.distance = distance;
+
+                            return context.sync();
+                        });
+                    });
+
+                    return Promise.all(promises).then(function () {
+                        var count = shapes.items.length;
+                        var text = count === 1 ? "1 Objekt" : count + " Objekte";
+                        showStatus("Schatten hinzugefügt (" + text + ") ✓", "success");
+                    });
+                });
+            }).catch(function (error) {
+                showStatus("Fehler: " + error.message, "error");
+            });
+        }
+    );
+}
+
+// ===================================================================
+// TAB 4: SHADOW - REMOVE SHADOW
+// ===================================================================
+function removeShadow() {
+    Office.context.document.getSelectedDataAsync(
+        Office.CoercionType.SlideRange,
+        function (asyncResult) {
+            if (asyncResult.status === Office.AsyncResultStatus.Failed) {
+                showStatus("Fehler: " + asyncResult.error.message, "error");
+                return;
+            }
+
+            PowerPoint.run(function (context) {
+                var shapes = context.presentation.getSelectedShapes();
+                shapes.load("items");
+
+                return context.sync().then(function () {
+                    if (shapes.items.length === 0) {
+                        showStatus("Bitte Objekt(e) auswählen!", "error");
+                        return;
+                    }
+
+                    var promises = shapes.items.map(function (shape) {
+                        shape.load("shadow");
+                        return context.sync().then(function () {
+                            shape.shadow.visible = false;
+                            return context.sync();
+                        });
+                    });
+
+                    return Promise.all(promises).then(function () {
+                        var count = shapes.items.length;
+                        var text = count === 1 ? "1 Objekt" : count + " Objekte";
+                        showStatus("Schatten entfernt (" + text + ") ✓", "success");
                     });
                 });
             }).catch(function (error) {

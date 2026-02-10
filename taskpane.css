@@ -1,4 +1,4 @@
-/* ===== Grid Resize Tool – Enhanced Styles ===== */
+/* ===== Grid Resize Tool Enhanced Styles ===== */
 
 :root {
     --primary: #1a1a2e;
@@ -15,6 +15,10 @@
     --align-hover: #3498db;
     --align-alt: #27ae60;
     --align-alt-hover: #2ecc71;
+    --shadow-color: #34495e;
+    --shadow-hover: #4a6785;
+    --shadow-remove: #95a5a6;
+    --shadow-remove-hover: #7f8c8d;
     --bg: #f5f6fa;
     --card-bg: #ffffff;
     --text: #2c3e50;
@@ -156,12 +160,12 @@ body {
 
 .tab-btn {
     flex: 1;
-    padding: 8px 6px;
+    padding: 8px 4px;
     border: none;
     border-radius: 7px;
     background: transparent;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-light);
     transition: all 0.2s;
@@ -291,6 +295,25 @@ body {
     box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 
+/* Shadow buttons */
+.shadow-btn {
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+    color: white;
+}
+.shadow-btn:hover {
+    background: linear-gradient(135deg, #4a6785, #34495e);
+    box-shadow: 0 4px 12px rgba(52, 73, 94, 0.4);
+}
+
+.shadow-remove-btn {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    color: white;
+}
+.shadow-remove-btn:hover {
+    background: linear-gradient(135deg, #7f8c8d, #6c7a7b);
+    box-shadow: 0 4px 12px rgba(149, 165, 166, 0.4);
+}
+
 /* Info button */
 .info-btn {
     background: linear-gradient(135deg, #3498db, #2980b9);
@@ -329,6 +352,36 @@ body {
     border: none;
     border-top: 1px solid var(--border);
     margin: 6px 0;
+}
+
+/* ===== Shadow Info Display ===== */
+.shadow-info {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 4px;
+}
+
+.shadow-info .info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 11px;
+}
+
+.shadow-info .info-item:last-child {
+    border-bottom: none;
+}
+
+.shadow-info .info-label {
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.shadow-info .info-value {
+    font-weight: 700;
+    color: var(--primary);
 }
 
 /* ===== Info Display ===== */
