@@ -92,7 +92,7 @@ function initUI() {
     document.getElementById("propMatchMin").addEventListener("click", function () { proportionalMatch("min"); });
     document.getElementById("setSlideSize").addEventListener("click", function () { setDroegeSlideSize(); });
     
-    // NEU: Hilfslinien ein/ausblenden
+    // Hilfslinien ein/ausblenden
     document.getElementById("toggleGuidelines").addEventListener("click", function () { toggleGuidelines(); });
 
     // Schatten-Werte kopieren
@@ -350,14 +350,13 @@ function setDroegeSlideSize() {
     });
 }
 
-// ===== EXTRAS: TOGGLE GUIDELINES (NEU) =====
+// ===== EXTRAS: TOGGLE GUIDELINES (KORRIGIERT - Rechtecke statt Linien) =====
 function toggleGuidelines() {
     PowerPoint.run(function (context) {
         var masters = context.presentation.slideMasters;
         masters.load("items");
         
         return context.sync().then(function () {
-            // Prüfe ob Hilfslinien bereits existieren (im ersten Master)
             if (masters.items.length === 0) {
                 showStatus("Keine Folienmaster gefunden", "error");
                 return context.sync();
@@ -368,7 +367,6 @@ function toggleGuidelines() {
             shapes.load("items");
             
             return context.sync().then(function () {
-                // Suche nach existierenden Hilfslinien
                 var existingGuidelines = [];
                 for (var i = 0; i < shapes.items.length; i++) {
                     shapes.items[i].load("name");
@@ -382,10 +380,8 @@ function toggleGuidelines() {
                     }
                     
                     if (existingGuidelines.length > 0) {
-                        // Hilfslinien existieren -> entfernen
                         return removeGuidelines(context, masters.items);
                     } else {
-                        // Hilfslinien existieren nicht -> hinzufügen
                         return addGuidelines(context, masters.items);
                     }
                 });
@@ -398,19 +394,18 @@ function toggleGuidelines() {
 
 function addGuidelines(context, masters) {
     var guidelinePositions = [
-        { type: "vertical", gridUnits: 9 },    // 1. Linie vertikal, von links 9 Rastereinheiten
-        { type: "vertical", gridUnits: 128 },  // 2. Linie vertikal, von links 128 Rastereinheiten
-        { type: "horizontal", gridUnits: 5 },  // 3. Linie horizontal, von oben 5 Rastereinheiten
-        { type: "horizontal", gridUnits: 9 },  // 4. Linie horizontal, von oben 9 Rastereinheiten
-        { type: "horizontal", gridUnits: 11 }, // 5. Linie horizontal, von oben 11 Rastereinheiten
-        { type: "horizontal", gridUnits: 14 }, // 6. Linie horizontal, von oben 14 Rastereinheiten
-        { type: "horizontal", gridUnits: 17 }, // 7. Linie horizontal, von oben 17 Rastereinheiten
-        { type: "horizontal", gridUnits: 84 }  // 8. Linie horizontal, von oben 84 Rastereinheiten
+        { type: "vertical", gridUnits: 9 },
+        { type: "vertical", gridUnits: 128 },
+        { type: "horizontal", gridUnits: 5 },
+        { type: "horizontal", gridUnits: 9 },
+        { type: "horizontal", gridUnits: 11 },
+        { type: "horizontal", gridUnits: 14 },
+        { type: "horizontal", gridUnits: 17 },
+        { type: "horizontal", gridUnits: 84 }
     ];
     
-    var lineWeight = 0.3; // pt
+    var lineWeightPt = 0.3;
     
-    // Foliengröße laden (für Linienlänge)
     var pageSetup = context.presentation.pageSetup;
     pageSetup.load(["slideWidth", "slideHeight"]);
     
@@ -418,35 +413,31 @@ function addGuidelines(context, masters) {
         var slideWidth = pageSetup.slideWidth;
         var slideHeight = pageSetup.slideHeight;
         
-        // Für alle Master
-        masters.forEach(function (master, masterIdx) {
-            guidelinePositions.forEach(function (guideline, idx) {
+        masters.forEach(function (master) {
+            guidelinePositions.forEach(function (guideline) {
                 var positionPt = cmToPoints(guideline.gridUnits * gridUnitCm);
-                var line;
+                var shape;
                 
                 if (guideline.type === "vertical") {
-                    // Vertikale Linie: von oben nach unten
-                    line = master.shapes.addLine(PowerPoint.ConnectorType.straight, {
-                        left: positionPt,
-                        top: 0,
-                        width: 0,
-                        height: slideHeight
-                    });
+                    // Vertikale Linie als sehr schmales Rechteck
+                    shape = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
+                    shape.left = positionPt - (lineWeightPt / 2);
+                    shape.top = 0;
+                    shape.width = lineWeightPt;
+                    shape.height = slideHeight;
                 } else {
-                    // Horizontale Linie: von links nach rechts
-                    line = master.shapes.addLine(PowerPoint.ConnectorType.straight, {
-                        left: 0,
-                        top: positionPt,
-                        width: slideWidth,
-                        height: 0
-                    });
+                    // Horizontale Linie als sehr flaches Rechteck
+                    shape = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
+                    shape.left = 0;
+                    shape.top = positionPt - (lineWeightPt / 2);
+                    shape.width = slideWidth;
+                    shape.height = lineWeightPt;
                 }
                 
-                // Linie formatieren
-                line.name = GUIDELINE_TAG + "_" + guideline.type + "_" + guideline.gridUnits;
-                line.lineFormat.color = "FF0000"; // Rot
-                line.lineFormat.weight = lineWeight;
-                line.lineFormat.dashStyle = PowerPoint.ShapeLineDashStyle.solid;
+                // Formatierung
+                shape.name = GUIDELINE_TAG + "_" + guideline.type + "_" + guideline.gridUnits;
+                shape.fill.setSolidColor("FF0000"); // Rot
+                shape.lineFormat.visible = false; // Kein Rahmen um das Rechteck
             });
         });
         
