@@ -11,7 +11,7 @@
     <div class="container">
         <div class="header">
             <h1>Grid Resize</h1>
-            <p class="build-info">Erstellt: 11.02.2026 17:23:58</p>
+            <p class="build-info">Erstellt: 11.02.2026 18:16:34</p>
             <p class="subtitle">Objekte rasterbasiert skalieren & ausrichten</p>
         </div>
 
@@ -35,6 +35,7 @@
             <button class="tab-btn active" data-tab="tabSize">Größe</button>
             <button class="tab-btn" data-tab="tabSnap">Raster</button>
             <button class="tab-btn" data-tab="tabMatch">Angleichen</button>
+            <button class="tab-btn" data-tab="tabTable">Tabelle</button>
             <button class="tab-btn" data-tab="tabExtras">Extras</button>
         </nav>
 
@@ -237,7 +238,55 @@
             </div>
         </div>
 
-        <!-- TAB 4: EXTRAS -->
+        <!-- TAB 4: TABLE -->
+        <div id="tabTable" class="tab-content">
+            <div class="controls-section">
+                <h2>Raster-Tabelle erstellen</h2>
+                <p class="hint">Erstellt eine Tabelle aus einzelnen Rechtecken mit Rasterabstand.</p>
+                
+                <div class="table-input-group">
+                    <label>Spalten (max. 15):</label>
+                    <input type="number" id="tableColumns" value="5" min="1" max="15">
+                </div>
+                
+                <div class="table-input-group">
+                    <label>Zeilen (max. 20):</label>
+                    <input type="number" id="tableRows" value="5" min="1" max="20">
+                </div>
+                
+                <div class="table-input-group">
+                    <label>Breite (Rastereinheiten):</label>
+                    <input type="number" id="tableCellWidth" value="5" min="1" step="1">
+                </div>
+                
+                <div class="table-input-group">
+                    <label>Höhe (Rastereinheiten):</label>
+                    <input type="number" id="tableCellHeight" value="5" min="1" step="1">
+                </div>
+                
+                <div class="table-info-box">
+                    <strong>Formatierung:</strong>
+                    <ul>
+                        <li>Füllfarbe: Weiß</li>
+                        <li>Linienfarbe: Grau</li>
+                        <li>Rahmenstärke: 0,3 pt</li>
+                        <li>Zellenabstand: 1 Rastereinheit</li>
+                    </ul>
+                    <strong>Position:</strong>
+                    <ul>
+                        <li>Von links: 8 Rastereinheiten</li>
+                        <li>Von oben: 17 Rastereinheiten</li>
+                    </ul>
+                </div>
+                
+                <button id="createTable" class="action-btn table-btn full-btn">
+                    <span class="icon-big">⊞</span><br>
+                    <span class="btn-label">Tabelle erstellen</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 5: EXTRAS -->
         <div id="tabExtras" class="tab-content">
             <div class="controls-section">
                 <h2>Hilfslinien (Folienmaster)</h2>
@@ -249,8 +298,8 @@
                 <details style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 11px;">
                     <summary style="cursor: pointer; font-weight: 600; margin-bottom: 6px;">📍 Positionen (Rastereinheiten):</summary>
                     <ul style="margin: 6px 0 0 18px; line-height: 1.6;">
-                        <li><strong>Vertikal:</strong> 9, 128 (von links)</li>
-                        <li><strong>Horizontal:</strong> 5, 9, 11, 14, 17, 84 (von oben)</li>
+                        <li><strong>Vertikal:</strong> 8, 126 (von links)</li>
+                        <li><strong>Horizontal:</strong> 5, 9, 15, 17, 86 (von oben)</li>
                     </ul>
                 </details>
             </div>
@@ -328,6 +377,7 @@
                     <li><strong>Größe:</strong> Ändert Breite/Höhe um die gewählte Rastereinheit. Bei mehreren Objekten werden Abstände beibehalten.</li>
                     <li><strong>Raster:</strong> Rundet Position und/oder Größe auf das Raster. Setzt feste Abstände zwischen Objekten.</li>
                     <li><strong>Angleichen:</strong> Gleicht Objekte an das größte oder kleinste an (min. 2 Objekte).</li>
+                    <li><strong>Tabelle:</strong> Erstellt eine Raster-Tabelle aus einzelnen Rechtecken.</li>
                     <li><strong>Extras:</strong> Hilfslinien im Master, Schatten-Referenzwerte & Papierformat.</li>
                 </ul>
             </details>

@@ -15,6 +15,8 @@
     --align-hover: #3498db;
     --align-alt: #27ae60;
     --align-alt-hover: #2ecc71;
+    --table-color: #16a085;
+    --table-hover: #1abc9c;
     --bg: #f5f6fa;
     --card-bg: #ffffff;
     --text: #2c3e50;
@@ -160,16 +162,18 @@ body {
     border-radius: var(--radius);
     padding: 4px;
     box-shadow: var(--shadow);
+    flex-wrap: wrap;
 }
 
 .tab-btn {
     flex: 1;
-    padding: 8px 6px;
+    min-width: 55px;
+    padding: 8px 4px;
     border: none;
     border-radius: 7px;
     background: transparent;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--text-light);
     transition: all 0.2s;
@@ -217,6 +221,64 @@ body {
     color: var(--text-light);
     margin-bottom: 8px;
     font-style: italic;
+}
+
+/* ===== Table Input Groups ===== */
+.table-input-group {
+    margin-bottom: 10px;
+}
+
+.table-input-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.table-input-group input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.table-input-group input:focus {
+    border-color: var(--table-color);
+}
+
+.table-info-box {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 10px;
+    margin: 12px 0;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.table-info-box strong {
+    display: block;
+    margin-top: 8px;
+    margin-bottom: 4px;
+    color: var(--primary);
+}
+
+.table-info-box strong:first-child {
+    margin-top: 0;
+}
+
+.table-info-box ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.table-info-box li {
+    margin-bottom: 2px;
 }
 
 /* ===== Buttons ===== */
@@ -299,6 +361,16 @@ body {
     box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 
+/* Table button */
+.table-btn {
+    background: linear-gradient(135deg, #16a085, #138d75);
+    color: white;
+}
+.table-btn:hover {
+    background: linear-gradient(135deg, #138d75, #117a65);
+    box-shadow: 0 4px 12px rgba(22, 160, 133, 0.3);
+}
+
 /* Info button */
 .info-btn {
     background: linear-gradient(135deg, #3498db, #2980b9);
@@ -311,11 +383,6 @@ body {
 
 /* Full width button */
 .full-btn {
-    flex: 1;
-}
-
-/* Both buttons (combined) */
-.both-btn {
     flex: 1;
 }
 
@@ -409,6 +476,12 @@ body {
     background: #d1ecf1;
     color: #0c5460;
     border: 1px solid #bee5eb;
+}
+
+.status.warning {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
 }
 
 /* ===== Info Section ===== */
