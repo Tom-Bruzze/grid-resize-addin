@@ -321,14 +321,13 @@ function proportionalMatch(mode) {
     });
 }
 
-// ===== TAB 4: CREATE GRID TABLE - FINALE VERSION FÜR AKTUELLE FOLIE =====
+// ===== TAB 4: CREATE GRID TABLE =====
 function createGridTable() {
     var cols = parseInt(document.getElementById("tableColumns").value);
     var rows = parseInt(document.getElementById("tableRows").value);
     var cellWidthUnits = parseFloat(document.getElementById("tableCellWidth").value);
     var cellHeightUnits = parseFloat(document.getElementById("tableCellHeight").value);
     
-    // Validierung
     if (isNaN(cols) || isNaN(rows) || cols < 1 || rows < 1) {
         showStatus("Bitte gültige Spalten- und Zeilenanzahl eingeben!", "error");
         return;
@@ -339,7 +338,6 @@ function createGridTable() {
         return;
     }
     
-    // Maximale Größe prüfen
     if (cols > 15) {
         showStatus("⚠️ Maximale Spaltenanzahl: 15", "warning");
         return;
@@ -351,18 +349,15 @@ function createGridTable() {
     }
     
     PowerPoint.run(function (context) {
-        // Hole die aktuell ausgewählten Folien
         var selectedSlides = context.presentation.getSelectedSlides();
         selectedSlides.load("items");
         
         return context.sync().then(function () {
             var slide;
             
-            // Wenn eine Folie ausgewählt ist, nutze diese
             if (selectedSlides.items.length > 0) {
                 slide = selectedSlides.items[0];
             } else {
-                // Fallback: Nutze alle Folien und nimm die erste
                 var slides = context.presentation.slides;
                 slides.load("items");
                 return context.sync().then(function () {
@@ -383,21 +378,17 @@ function createGridTable() {
 }
 
 function createTableOnSlide(context, slide, cols, rows, cellWidthUnits, cellHeightUnits) {
-    // Berechnungen in Rastereinheiten
     var cellWidthCm = cellWidthUnits * gridUnitCm;
     var cellHeightCm = cellHeightUnits * gridUnitCm;
     var spacingCm = gridUnitCm;
     
-    // Umrechnung in Points
     var cellWidthPt = cmToPoints(cellWidthCm);
     var cellHeightPt = cmToPoints(cellHeightCm);
     var spacingPt = cmToPoints(spacingCm);
     
-    // Startposition: 8 RE von links, 17 RE von oben
     var startX = cmToPoints(8 * gridUnitCm);
     var startY = cmToPoints(17 * gridUnitCm);
     
-    // Tabelle erstellen
     for (var row = 0; row < rows; row++) {
         for (var col = 0; col < cols; col++) {
             var shape = slide.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
@@ -425,7 +416,10 @@ function createTableOnSlide(context, slide, cols, rows, cellWidthUnits, cellHeig
 
 // ===== TAB 5: EXTRAS =====
 function setDroegeSlideSize() {
-    var targetWidth  = 786;
+    // ANGEPASST: 27,711 cm × 19,297 cm
+    // 27,711 cm = 785,51476 pt ≈ 785.5 pt
+    // 19,297 cm = 546,83961 pt ≈ 547 pt (bleibt gleich)
+    var targetWidth  = 785.5;  // GEÄNDERT von 786 pt
     var targetHeight = 547;
 
     PowerPoint.run(function (context) {
@@ -441,7 +435,7 @@ function setDroegeSlideSize() {
                 return context.sync();
             })
             .then(function () {
-                showStatus("Papierformat gesetzt: 27,728 × 19,297 cm ✓", "success");
+                showStatus("Papierformat gesetzt: 27,711 × 19,297 cm ✓", "success");
             });
     }).catch(function (error) {
         showStatus("Fehler: " + error.message, "error");
