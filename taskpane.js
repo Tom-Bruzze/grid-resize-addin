@@ -292,22 +292,34 @@ function proportionalMatch(mode) {
 function setDroegeSlideSize() {
     var DROEGE_WIDTH_CM = 27.724;
     var DROEGE_HEIGHT_CM = 19.319;
+    var targetWidthPt  = Math.round(DROEGE_WIDTH_CM  * CM_TO_POINTS * 100) / 100; // 785.67 pt
+    var targetHeightPt = Math.round(DROEGE_HEIGHT_CM * CM_TO_POINTS * 100) / 100; // 547.62 pt
 
     // Prüfe ob PowerPointApi 1.10 verfügbar ist (pageSetup)
-    if (!Office.context.requirements ||
+    if (Office.context.requirements &&
+        Office.context.requirements.isSetSupported &&
         !Office.context.requirements.isSetSupported("PowerPointApi", "1.10")) {
-        showStatus("Papierformat-Änderung erfordert PowerPointApi 1.10 – auf diesem Gerät/Browser nicht verfügbar.", "error");
+        showStatus("Papierformat erfordert PowerPointApi 1.10 – auf diesem Gerät nicht verfügbar.", "error");
         return;
     }
 
     PowerPoint.run(function (context) {
         var pageSetup = context.presentation.pageSetup;
-        pageSetup.slideWidth  = DROEGE_WIDTH_CM * CM_TO_POINTS;  // 785,67 pt
-        pageSetup.slideHeight = DROEGE_HEIGHT_CM * CM_TO_POINTS; // 547,62 pt
+        // Erst laden, dann setzen (nötig auf macOS)
+        pageSetup.load(["slideWidth", "slideHeight"]);
         return context.sync().then(function () {
+            pageSetup.slideWidth  = targetWidthPt;
+            pageSetup.slideHeight = targetHeightPt;
+            return context.sync();
+        }).then(function () {
             showStatus("Papierformat gesetzt: " + DROEGE_WIDTH_CM + " × " + DROEGE_HEIGHT_CM + " cm ✓", "success");
         });
     }).catch(function (error) {
-        showStatus("Fehler beim Setzen des Formats: " + error.message, "error");
+        // Fallback-Hinweis mit konkreten Werten
+        if (error.message && error.message.indexOf("InvalidArgument") !== -1) {
+            showStatus("API-Einschränkung auf dieser Plattform. Bitte manuell setzen: Entwurf → Foliengröße → Benutzerdefiniert: " + DROEGE_WIDTH_CM + " × " + DROEGE_HEIGHT_CM + " cm", "error");
+        } else {
+            showStatus("Fehler: " + error.message, "error");
+        }
     });
 }
