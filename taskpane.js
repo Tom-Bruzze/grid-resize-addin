@@ -1,7 +1,7 @@
 /* ===== Grid Resize Tool - JavaScript ===== */
 
 // Constants
-var CM_TO_POINTS = 28.3465;
+var CM_TO_POINTS = 72 / 2.54;  // exact: 1 inch = 72pt = 2.54cm
 var MIN_SIZE_CM = 0.1;
 
 // State
@@ -175,46 +175,22 @@ function proportionalResize(deltaCm) {
 // ===================================================================
 // TAB 2: SNAP TO GRID
 // ===================================================================
-function snapSizeToGrid(shape) {
-    var widthCm = pointsToCm(shape.width);
-    var heightCm = pointsToCm(shape.height);
-    var newW = Math.round(widthCm / gridUnitCm) * gridUnitCm;
-    var newH = Math.round(heightCm / gridUnitCm) * gridUnitCm;
-    // Minimum: one grid unit
-    if (newW < gridUnitCm) newW = gridUnitCm;
-    if (newH < gridUnitCm) newH = gridUnitCm;
-    shape.width = cmToPoints(newW);
-    shape.height = cmToPoints(newH);
-}
-
-function snapPositionToGrid(shape) {
-    var leftCm = pointsToCm(shape.left);
-    var topCm = pointsToCm(shape.top);
-    shape.left = cmToPoints(Math.round(leftCm / gridUnitCm) * gridUnitCm);
-    shape.top = cmToPoints(Math.round(topCm / gridUnitCm) * gridUnitCm);
-}
-
 function snapToGrid(mode) {
     withSelectedShapes(1, function (context, items) {
         items.forEach(function (shape) { shape.load(["left", "top", "width", "height"]); });
         return context.sync().then(function () {
-
-            if (mode === "size") {
-                // Only snap size to nearest grid multiple
-                items.forEach(function (shape) { snapSizeToGrid(shape); });
-            } else if (mode === "position") {
-                // Only snap left/top to nearest grid point
-                items.forEach(function (shape) { snapPositionToGrid(shape); });
-            } else if (mode === "both") {
-                // FIRST snap size, THEN snap position
-                // This ensures left/top are on grid AND right/bottom edges
-                // are also on grid (because size is a grid multiple)
-                items.forEach(function (shape) {
-                    snapSizeToGrid(shape);
-                    snapPositionToGrid(shape);
-                });
-            }
-
+            items.forEach(function (shape) {
+                if (mode === "position" || mode === "both") {
+                    shape.left = cmToPoints(roundToGrid(pointsToCm(shape.left)));
+                    shape.top = cmToPoints(roundToGrid(pointsToCm(shape.top)));
+                }
+                if (mode === "size" || mode === "both") {
+                    var newW = roundToGrid(pointsToCm(shape.width));
+                    var newH = roundToGrid(pointsToCm(shape.height));
+                    if (newW >= MIN_SIZE_CM) shape.width = cmToPoints(newW);
+                    if (newH >= MIN_SIZE_CM) shape.height = cmToPoints(newH);
+                }
+            });
             return context.sync().then(function () {
                 var modeText = mode === "both" ? "Position & Größe" : (mode === "position" ? "Position" : "Größe");
                 showStatus(modeText + " am Raster ausgerichtet ✓", "success");
