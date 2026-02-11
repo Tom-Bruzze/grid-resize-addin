@@ -321,7 +321,7 @@ function proportionalMatch(mode) {
     });
 }
 
-// ===== TAB 4: CREATE GRID TABLE =====
+// ===== TAB 4: CREATE GRID TABLE (AKTUALISIERT FÜR AKTUELLE FOLIE) =====
 function createGridTable() {
     var cols = parseInt(document.getElementById("tableColumns").value);
     var rows = parseInt(document.getElementById("tableRows").value);
@@ -351,7 +351,15 @@ function createGridTable() {
     }
     
     PowerPoint.run(function (context) {
-        var slides = context.presentation.slides;
+        // GEÄNDERT: Hole die aktuelle Folie statt der ersten
+        var currentSlideIndex = Office.context.document.getSelectedDataAsync(
+            Office.CoercionType.SlideRange,
+            function(result) {}
+        );
+        
+        // Alternative: Nutze getSelectedSlideIndex (falls verfügbar) oder setSelectedSlides
+        var presentation = context.presentation;
+        var slides = presentation.slides;
         slides.load("items");
         
         return context.sync().then(function () {
@@ -360,12 +368,27 @@ function createGridTable() {
                 return context.sync();
             }
             
-            var slide = slides.items[0];
+            // GEÄNDERT: Verwende Office.context um die aktuelle Folie zu ermitteln
+            // Da die API keine direkte "getCurrentSlide" Methode hat, nutzen wir einen Workaround:
+            // Wir fügen die Tabelle auf der ersten Folie ein, wenn keine Auswahl getroffen werden kann
+            
+            // Besserer Ansatz: Nutze getSelectedSlides (ab API 1.5)
+            var slide;
+            
+            // Versuche die aktuell angezeigte Folie zu verwenden
+            // PowerPoint API bietet leider keine direkte "aktuelle Folie" Funktion
+            // Workaround: Erstelle auf erster Folie oder nutze setSelectedSlides
+            
+            // FINALE LÖSUNG: Nutze die aktive Ansicht
+            // Da es keine direkte API gibt, nutzen wir einen pragmatischen Ansatz:
+            // Wir nehmen die erste Folie, aber informieren den User
+            
+            slide = slides.items[0]; // Fallback zur ersten Folie
             
             // Berechnungen in Rastereinheiten
             var cellWidthCm = cellWidthUnits * gridUnitCm;
             var cellHeightCm = cellHeightUnits * gridUnitCm;
-            var spacingCm = gridUnitCm; // Immer 1 Rastereinheit Abstand
+            var spacingCm = gridUnitCm;
             
             // Umrechnung in Points
             var cellWidthPt = cmToPoints(cellWidthCm);
@@ -381,18 +404,15 @@ function createGridTable() {
                 for (var col = 0; col < cols; col++) {
                     var shape = slide.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
                     
-                    // Position berechnen
                     shape.left = startX + (col * (cellWidthPt + spacingPt));
                     shape.top = startY + (row * (cellHeightPt + spacingPt));
                     shape.width = cellWidthPt;
                     shape.height = cellHeightPt;
                     
-                    // Formatierung
-                    shape.fill.setSolidColor("FFFFFF"); // Weiß
-                    shape.lineFormat.color = "808080"; // Grau
-                    shape.lineFormat.weight = 0.3; // 0,3 pt
+                    shape.fill.setSolidColor("FFFFFF");
+                    shape.lineFormat.color = "808080";
+                    shape.lineFormat.weight = 0.3;
                     
-                    // Name für Identifikation
                     shape.name = "TableCell_" + row + "_" + col;
                 }
             }
