@@ -38,6 +38,9 @@
       <button class="tab-btn" data-tab="tab-extras">Extras</button>
     </div>
 
+    <!-- Main Content Area -->
+    <div class="main-content">
+
     <!-- ==================== TAB 1: Resize ==================== -->
     <div class="tab-content active" id="tab-resize">
       <div class="controls-section">
@@ -64,27 +67,23 @@
             <br/><span class="btn-label">+ H&ouml;he</span>
           </button>
         </div>
-      </div>
 
-      <hr class="divider" />
+        <hr class="divider" />
 
-      <div class="controls-section">
         <h2>Beide Richtungen</h2>
         <div class="button-row">
-          <button class="action-btn shrink-btn both-btn" id="shrinkBoth" title="Beides verkleinern">
-            <span class="icon-big">&#8854;</span>
+          <button class="action-btn shrink-btn" id="shrinkBoth" title="Beides verkleinern">
+            <span class="icon-big">&#8690;</span>
             <br/><span class="btn-label">&minus; Beides</span>
           </button>
-          <button class="action-btn grow-btn both-btn" id="growBoth" title="Beides vergroessern">
-            <span class="icon-big">&#8853;</span>
+          <button class="action-btn grow-btn" id="growBoth" title="Beides vergroessern">
+            <span class="icon-big">&#8689;</span>
             <br/><span class="btn-label">+ Beides</span>
           </button>
         </div>
-      </div>
 
-      <hr class="divider" />
+        <hr class="divider" />
 
-      <div class="controls-section">
         <h2>Proportionale Skalierung</h2>
         <div class="button-row">
           <button class="action-btn shrink-btn" id="propShrink" title="Proportional verkleinern">
@@ -120,7 +119,7 @@
         <p class="hint">Rundet Breite und H&ouml;he auf das n&auml;chste Vielfache der Rastereinheit.</p>
         <div class="button-row">
           <button class="action-btn snap-btn full-btn" id="snapSize" title="Groesse an Raster anpassen">
-            <span class="icon-big">&#11034;</span>
+            <span class="icon-big">&#8596;</span>
             <br/><span class="btn-label">Gr&ouml;&szlig;e einrasten</span>
           </button>
         </div>
@@ -129,10 +128,9 @@
       <hr class="divider" />
 
       <div class="controls-section">
-        <h2>Komplett an Raster ausrichten</h2>
-        <p class="hint">Richtet Position UND Gr&ouml;&szlig;e gleichzeitig am Raster aus.</p>
+        <h2>Beides an Raster</h2>
         <div class="button-row">
-          <button class="action-btn snap-btn accent-btn full-btn" id="snapBoth" title="Position und Groesse an Raster">
+          <button class="action-btn snap-btn full-btn" id="snapBoth" title="Position und Groesse an Raster">
             <span class="icon-big">&#9638;</span>
             <br/><span class="btn-label">Alles einrasten</span>
           </button>
@@ -160,12 +158,12 @@
         <p class="hint">Alle ausgew&auml;hlten Objekte erhalten dieselbe Breite.</p>
         <div class="button-row">
           <button class="action-btn align-btn" id="matchWidthMax" title="Breite des groessten Objekts">
-            <span class="icon-arrows">&#9654;&#9654;</span>
-            <br/><span class="btn-label">Gr&ouml;&szlig;te Breite</span>
+            <span class="icon-big">&#8594;</span>
+            <br/><span class="btn-label">Gr&ouml;&szlig;tes Objekt</span>
           </button>
           <button class="action-btn align-btn-alt" id="matchWidthMin" title="Breite des kleinsten Objekts">
-            <span class="icon-arrows">&#9664;&#9664;</span>
-            <br/><span class="btn-label">Kleinste Breite</span>
+            <span class="icon-big">&#8592;</span>
+            <br/><span class="btn-label">Kleinstes Objekt</span>
           </button>
         </div>
       </div>
@@ -177,12 +175,12 @@
         <p class="hint">Alle ausgew&auml;hlten Objekte erhalten dieselbe H&ouml;he.</p>
         <div class="button-row">
           <button class="action-btn align-btn" id="matchHeightMax" title="Hoehe des groessten Objekts">
-            <span class="icon-arrows">&#9660;&#9660;</span>
-            <br/><span class="btn-label">Gr&ouml;&szlig;te H&ouml;he</span>
+            <span class="icon-big">&#8595;</span>
+            <br/><span class="btn-label">Gr&ouml;&szlig;tes Objekt</span>
           </button>
           <button class="action-btn align-btn-alt" id="matchHeightMin" title="Hoehe des kleinsten Objekts">
-            <span class="icon-arrows">&#9650;&#9650;</span>
-            <br/><span class="btn-label">Kleinste H&ouml;he</span>
+            <span class="icon-big">&#8593;</span>
+            <br/><span class="btn-label">Kleinstes Objekt</span>
           </button>
         </div>
       </div>
@@ -191,13 +189,14 @@
 
       <div class="controls-section">
         <h2>Gleiche Gr&ouml;&szlig;e (Breite &amp; H&ouml;he)</h2>
+        <p class="hint">Alle ausgew&auml;hlten Objekte erhalten dieselbe Breite und H&ouml;he.</p>
         <div class="button-row">
           <button class="action-btn align-btn" id="matchBothMax" title="Groesse des groessten Objekts">
-            <span class="icon-big">&#9724;</span>
+            <span class="icon-big">&#8600;</span>
             <br/><span class="btn-label">Gr&ouml;&szlig;tes Objekt</span>
           </button>
           <button class="action-btn align-btn-alt" id="matchBothMin" title="Groesse des kleinsten Objekts">
-            <span class="icon-big">&#9725;</span>
+            <span class="icon-big">&#8598;</span>
             <br/><span class="btn-label">Kleinstes Objekt</span>
           </button>
         </div>
@@ -241,13 +240,12 @@
         </ol>
 
         <div class="shadow-info">
-          <div class="info-item"><span class="info-label">Voreinstellung:</span><span class="info-value">Offset unten rechts</span></div>
-          <div class="info-item"><span class="info-label">Farbe:</span><span class="info-value">Schwarz 50% (#808080)</span></div>
-          <div class="info-item"><span class="info-label">Transparenz:</span><span class="info-value">30%</span></div>
-          <div class="info-item"><span class="info-label">Gr&ouml;&szlig;e:</span><span class="info-value">100%</span></div>
-          <div class="info-item"><span class="info-label">Weichzeichnen:</span><span class="info-value">0,5 Pt.</span></div>
-          <div class="info-item"><span class="info-label">Winkel:</span><span class="info-value">45&deg;</span></div>
-          <div class="info-item"><span class="info-label">Abstand:</span><span class="info-value">1 Pt.</span></div>
+          <div class="info-item"><span class="info-label">Farbe:</span><span class="info-value">Schwarz</span></div>
+          <div class="info-item"><span class="info-label">Transparenz:</span><span class="info-value">75 %</span></div>
+          <div class="info-item"><span class="info-label">Gr&ouml;&szlig;e:</span><span class="info-value">100 %</span></div>
+          <div class="info-item"><span class="info-label">Weichzeichnen:</span><span class="info-value">4 pt</span></div>
+          <div class="info-item"><span class="info-label">Winkel:</span><span class="info-value">90&deg;</span></div>
+          <div class="info-item"><span class="info-label">Abstand:</span><span class="info-value">1 pt</span></div>
         </div>
 
         <div class="button-row" style="margin-top: 12px;">
@@ -258,9 +256,24 @@
         </div>
         <p class="hint" style="margin-top: 6px;">Kopiert die Schatten-Werte als Text in die Zwischenablage.</p>
       </div>
+
+      <hr class="divider" />
+
+      <div class="controls-section">
+        <h2>Papierformat</h2>
+        <p class="hint">Setzt die Foliengr&ouml;&szlig;e auf das Droege-Format (27,724 &times; 19,319 cm).</p>
+        <div class="button-row">
+          <button class="action-btn snap-btn accent-btn full-btn" id="setSlideSize" title="Droege-Format einstellen">
+            <span class="icon-big">&#128196;</span>
+            <br/><span class="btn-label">Droege-Format setzen</span>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <!-- Status -->
+    </div><!-- /main-content -->
+
+    <!-- Status Bar -->
     <div id="status" class="status"></div>
 
     <!-- Info -->
@@ -269,20 +282,16 @@
         <summary>&#8505;&#65039; Hinweise</summary>
         <ul>
           <li>W&auml;hle ein oder mehrere Objekte auf der Folie aus.</li>
-          <li>Stelle die gew&uuml;nschte Rastereinheit ein.</li>
-          <li><b>Gr&ouml;&szlig;e:</b> Breite/H&ouml;he um Rastereinheit &auml;ndern.</li>
-          <li><b>Raster:</b> Position und Gr&ouml;&szlig;e am Raster einrasten.</li>
-          <li><b>Angleichen:</b> Mehrere Objekte auf gleiche Ma&szlig;e bringen.</li>
-          <li><b>Extras:</b> Schatten-Referenzwerte zum manuellen Setzen.</li>
-          <li>Mindestgr&ouml;&szlig;e: 0,1 cm.</li>
+          <li>Nutze die Buttons, um Gr&ouml;&szlig;e, Position oder Ausrichtung rasterbasiert anzupassen.</li>
+          <li><b>Gr&ouml;&szlig;e:</b> &Auml;ndert Breite/H&ouml;he um die gew&auml;hlte Rastereinheit. Bei mehreren Objekten werden Abst&auml;nde beibehalten.</li>
+          <li><b>Raster:</b> Rundet Position und/oder Gr&ouml;&szlig;e auf das Raster.</li>
+          <li><b>Angleichen:</b> Gleicht Objekte an das gr&ouml;&szlig;te oder kleinste an (min. 2 Objekte).</li>
+          <li><b>Extras:</b> Schatten-Referenzwerte zum manuellen Setzen &amp; Papierformat.</li>
         </ul>
       </details>
     </div>
 
-    <div class="footer">
-      <span>DROEGE GROUP</span>
-    </div>
-  </div>
+  </div><!-- /container -->
 
   <script src="taskpane.js"></script>
 </body>

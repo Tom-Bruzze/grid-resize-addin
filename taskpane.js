@@ -84,6 +84,30 @@ function initUI() {
     document.getElementById("matchBothMin").addEventListener("click", function () { matchDimension("both", "min"); });
     document.getElementById("propMatchMax").addEventListener("click", function () { proportionalMatch("max"); });
     document.getElementById("propMatchMin").addEventListener("click", function () { proportionalMatch("min"); });
+    document.getElementById("setSlideSize").addEventListener("click", function () { setDroegeSlideSize(); });
+
+    // Schatten-Werte kopieren
+    var copyBtn = document.getElementById("copyShadowText");
+    if (copyBtn) {
+        copyBtn.addEventListener("click", function () {
+            var text = "Schatten-Standardwerte:\n" +
+                "Farbe: Schwarz\n" +
+                "Transparenz: 75 %\n" +
+                "Größe: 100 %\n" +
+                "Weichzeichnen: 4 pt\n" +
+                "Winkel: 90°\n" +
+                "Abstand: 1 pt";
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () {
+                    showStatus("Schatten-Werte kopiert ✓", "success");
+                }).catch(function () {
+                    showStatus("Kopieren fehlgeschlagen", "error");
+                });
+            } else {
+                showStatus("Zwischenablage nicht verfügbar", "error");
+            }
+        });
+    }
 }
 
 function updatePresetButtons(val) {
@@ -246,7 +270,7 @@ function matchDimension(dimension, mode) {
             var tw = mode === "max" ? Math.max.apply(null, ws) : Math.min.apply(null, ws);
             var th = mode === "max" ? Math.max.apply(null, hs) : Math.min.apply(null, hs);
             items.forEach(function (s) { if (dimension === "width" || dimension === "both") s.width = tw; if (dimension === "height" || dimension === "both") s.height = th; });
-            return context.sync().then(function () { showStatus("Alle auf " + (dimension === "both" ? "Größe" : dimension === "width" ? "Breite" : "Höhe") + " des " + (mode === "max" ? "größtes" : "kleinstes") + "n Objekts ✓", "success"); });
+            return context.sync().then(function () { showStatus("Alle auf " + (dimension === "both" ? "Größe" : dimension === "width" ? "Breite" : "Höhe") + " des " + (mode === "max" ? "größten" : "kleinsten") + " Objekts ✓", "success"); });
         });
     });
 }
@@ -261,5 +285,29 @@ function proportionalMatch(mode) {
             items.forEach(function (s) { var r = s.height / s.width; s.width = tw; s.height = tw * r; });
             return context.sync().then(function () { showStatus("Proportional auf Breite des " + (mode === "max" ? "größten" : "kleinsten") + " Objekts ✓", "success"); });
         });
+    });
+}
+
+// ===== EXTRAS: SET DROEGE SLIDE SIZE =====
+function setDroegeSlideSize() {
+    var DROEGE_WIDTH_CM = 27.724;
+    var DROEGE_HEIGHT_CM = 19.319;
+
+    // Prüfe ob PowerPointApi 1.10 verfügbar ist (pageSetup)
+    if (!Office.context.requirements ||
+        !Office.context.requirements.isSetSupported("PowerPointApi", "1.10")) {
+        showStatus("Papierformat-Änderung erfordert PowerPointApi 1.10 – auf diesem Gerät/Browser nicht verfügbar.", "error");
+        return;
+    }
+
+    PowerPoint.run(function (context) {
+        var pageSetup = context.presentation.pageSetup;
+        pageSetup.slideWidth  = DROEGE_WIDTH_CM * CM_TO_POINTS;  // 785,67 pt
+        pageSetup.slideHeight = DROEGE_HEIGHT_CM * CM_TO_POINTS; // 547,62 pt
+        return context.sync().then(function () {
+            showStatus("Papierformat gesetzt: " + DROEGE_WIDTH_CM + " × " + DROEGE_HEIGHT_CM + " cm ✓", "success");
+        });
+    }).catch(function (error) {
+        showStatus("Fehler beim Setzen des Formats: " + error.message, "error");
     });
 }
