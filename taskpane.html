@@ -239,6 +239,24 @@
         <!-- TAB 4: EXTRAS -->
         <div id="tabExtras" class="tab-content">
             <div class="controls-section">
+                <h2>Hilfslinien (Folienmaster)</h2>
+                <p class="hint">Fügt rote Hilfslinien (0,3 pt) in alle Folienmaster ein oder entfernt sie.</p>
+                <button id="toggleGuidelines" class="action-btn snap-btn full-btn">
+                    <span class="icon-big">📐</span><br>
+                    <span class="btn-label">Hilfslinien ein/aus</span>
+                </button>
+                <details style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 11px;">
+                    <summary style="cursor: pointer; font-weight: 600; margin-bottom: 6px;">📍 Positionen (Rastereinheiten):</summary>
+                    <ul style="margin: 6px 0 0 18px; line-height: 1.6;">
+                        <li><strong>Vertikal:</strong> 9, 128 (von links)</li>
+                        <li><strong>Horizontal:</strong> 5, 9, 11, 14, 17, 84 (von oben)</li>
+                    </ul>
+                </details>
+            </div>
+
+            <hr class="divider">
+
+            <div class="controls-section">
                 <h2>Schatten – Standardwerte</h2>
                 <p class="hint">⚠️ Die PowerPoint JS-API unterstützt <strong>keine Schatten-Eigenschaften</strong>. Schatten müssen manuell gesetzt werden.</p>
                 
@@ -309,7 +327,7 @@
                     <li><strong>Größe:</strong> Ändert Breite/Höhe um die gewählte Rastereinheit. Bei mehreren Objekten werden Abstände beibehalten.</li>
                     <li><strong>Raster:</strong> Rundet Position und/oder Größe auf das Raster. Setzt feste Abstände zwischen Objekten.</li>
                     <li><strong>Angleichen:</strong> Gleicht Objekte an das größte oder kleinste an (min. 2 Objekte).</li>
-                    <li><strong>Extras:</strong> Schatten-Referenzwerte zum manuellen Setzen & Papierformat.</li>
+                    <li><strong>Extras:</strong> Hilfslinien im Master, Schatten-Referenzwerte & Papierformat.</li>
                 </ul>
             </details>
         </div>

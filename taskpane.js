@@ -4,6 +4,7 @@ var CM_TO_POINTS = 28.3465;
 var MIN_SIZE_CM = 0.1;
 var gridUnitCm = 0.21;
 var apiAvailable = false;
+var GUIDELINE_TAG = "DROEGE_GUIDELINE"; // Eindeutiger Tag für Hilfslinien
 
 Office.onReady(function (info) {
     if (info.host === Office.HostType.PowerPoint) {
@@ -77,7 +78,7 @@ function initUI() {
     document.getElementById("snapBoth").addEventListener("click", function () { snapToGrid("both"); });
     document.getElementById("showInfo").addEventListener("click", function () { showShapeInfo(); });
     
-    // NEU: Feste Abstände setzen
+    // Feste Abstände setzen
     document.getElementById("setSpacingH").addEventListener("click", function () { setFixedSpacing("horizontal"); });
     document.getElementById("setSpacingV").addEventListener("click", function () { setFixedSpacing("vertical"); });
     
@@ -90,6 +91,9 @@ function initUI() {
     document.getElementById("propMatchMax").addEventListener("click", function () { proportionalMatch("max"); });
     document.getElementById("propMatchMin").addEventListener("click", function () { proportionalMatch("min"); });
     document.getElementById("setSlideSize").addEventListener("click", function () { setDroegeSlideSize(); });
+    
+    // NEU: Hilfslinien ein/ausblenden
+    document.getElementById("toggleGuidelines").addEventListener("click", function () { toggleGuidelines(); });
 
     // Schatten-Werte kopieren
     var copyBtn = document.getElementById("copyShadowText");
@@ -247,7 +251,7 @@ function snapToGrid(mode) {
     });
 }
 
-// ===== TAB 2: SET FIXED SPACING (NEU) =====
+// ===== TAB 2: SET FIXED SPACING =====
 function setFixedSpacing(direction) {
     withSelectedShapes(2, function (context, items) {
         items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
@@ -255,9 +259,7 @@ function setFixedSpacing(direction) {
             var spacing = cmToPoints(gridUnitCm);
             
             if (direction === "horizontal") {
-                // Sortiere Objekte von links nach rechts
                 var sorted = items.slice().sort(function (a, b) { return a.left - b.left; });
-                // Erstes Objekt bleibt an Position, alle folgenden werden verschoben
                 for (var i = 1; i < sorted.length; i++) {
                     sorted[i].left = sorted[i - 1].left + sorted[i - 1].width + spacing;
                 }
@@ -265,9 +267,7 @@ function setFixedSpacing(direction) {
                     showStatus("Horizontale Abstände auf " + gridUnitCm.toFixed(2) + " cm gesetzt ✓", "success");
                 });
             } else if (direction === "vertical") {
-                // Sortiere Objekte von oben nach unten
                 var sorted = items.slice().sort(function (a, b) { return a.top - b.top; });
-                // Erstes Objekt bleibt an Position, alle folgenden werden verschoben
                 for (var i = 1; i < sorted.length; i++) {
                     sorted[i].top = sorted[i - 1].top + sorted[i - 1].height + spacing;
                 }
@@ -327,10 +327,6 @@ function proportionalMatch(mode) {
 
 // ===== EXTRAS: SET DROEGE SLIDE SIZE =====
 function setDroegeSlideSize() {
-    // Droege-Format: 27,728 cm × 19,297 cm
-    // 1 cm = 28.3465 pt
-    // Breite: 27.728 × 28.3465 = 785.99 pt → gerundet 786 pt
-    // Höhe:  19.297 × 28.3465 = 547.00 pt → gerundet 547 pt
     var targetWidth  = 786;
     var targetHeight = 547;
 
@@ -339,19 +335,150 @@ function setDroegeSlideSize() {
         pageSetup.load(["slideWidth", "slideHeight"]);
         return context.sync()
             .then(function () {
-                // Erst Breite setzen
                 pageSetup.slideWidth = targetWidth;
                 return context.sync();
             })
             .then(function () {
-                // Dann Höhe setzen
                 pageSetup.slideHeight = targetHeight;
                 return context.sync();
             })
             .then(function () {
-                showStatus("Papierformat gesetzt: 27,728 \u00d7 19,297 cm \u2714", "success");
+                showStatus("Papierformat gesetzt: 27,728 × 19,297 cm ✓", "success");
             });
     }).catch(function (error) {
         showStatus("Fehler: " + error.message, "error");
+    });
+}
+
+// ===== EXTRAS: TOGGLE GUIDELINES (NEU) =====
+function toggleGuidelines() {
+    PowerPoint.run(function (context) {
+        var masters = context.presentation.slideMasters;
+        masters.load("items");
+        
+        return context.sync().then(function () {
+            // Prüfe ob Hilfslinien bereits existieren (im ersten Master)
+            if (masters.items.length === 0) {
+                showStatus("Keine Folienmaster gefunden", "error");
+                return context.sync();
+            }
+            
+            var firstMaster = masters.items[0];
+            var shapes = firstMaster.shapes;
+            shapes.load("items");
+            
+            return context.sync().then(function () {
+                // Suche nach existierenden Hilfslinien
+                var existingGuidelines = [];
+                for (var i = 0; i < shapes.items.length; i++) {
+                    shapes.items[i].load("name");
+                }
+                
+                return context.sync().then(function () {
+                    for (var i = 0; i < shapes.items.length; i++) {
+                        if (shapes.items[i].name && shapes.items[i].name.indexOf(GUIDELINE_TAG) === 0) {
+                            existingGuidelines.push(shapes.items[i]);
+                        }
+                    }
+                    
+                    if (existingGuidelines.length > 0) {
+                        // Hilfslinien existieren -> entfernen
+                        return removeGuidelines(context, masters.items);
+                    } else {
+                        // Hilfslinien existieren nicht -> hinzufügen
+                        return addGuidelines(context, masters.items);
+                    }
+                });
+            });
+        });
+    }).catch(function (error) {
+        showStatus("Fehler: " + error.message, "error");
+    });
+}
+
+function addGuidelines(context, masters) {
+    var guidelinePositions = [
+        { type: "vertical", gridUnits: 9 },    // 1. Linie vertikal, von links 9 Rastereinheiten
+        { type: "vertical", gridUnits: 128 },  // 2. Linie vertikal, von links 128 Rastereinheiten
+        { type: "horizontal", gridUnits: 5 },  // 3. Linie horizontal, von oben 5 Rastereinheiten
+        { type: "horizontal", gridUnits: 9 },  // 4. Linie horizontal, von oben 9 Rastereinheiten
+        { type: "horizontal", gridUnits: 11 }, // 5. Linie horizontal, von oben 11 Rastereinheiten
+        { type: "horizontal", gridUnits: 14 }, // 6. Linie horizontal, von oben 14 Rastereinheiten
+        { type: "horizontal", gridUnits: 17 }, // 7. Linie horizontal, von oben 17 Rastereinheiten
+        { type: "horizontal", gridUnits: 84 }  // 8. Linie horizontal, von oben 84 Rastereinheiten
+    ];
+    
+    var lineWeight = 0.3; // pt
+    
+    // Foliengröße laden (für Linienlänge)
+    var pageSetup = context.presentation.pageSetup;
+    pageSetup.load(["slideWidth", "slideHeight"]);
+    
+    return context.sync().then(function () {
+        var slideWidth = pageSetup.slideWidth;
+        var slideHeight = pageSetup.slideHeight;
+        
+        // Für alle Master
+        masters.forEach(function (master, masterIdx) {
+            guidelinePositions.forEach(function (guideline, idx) {
+                var positionPt = cmToPoints(guideline.gridUnits * gridUnitCm);
+                var line;
+                
+                if (guideline.type === "vertical") {
+                    // Vertikale Linie: von oben nach unten
+                    line = master.shapes.addLine(PowerPoint.ConnectorType.straight, {
+                        left: positionPt,
+                        top: 0,
+                        width: 0,
+                        height: slideHeight
+                    });
+                } else {
+                    // Horizontale Linie: von links nach rechts
+                    line = master.shapes.addLine(PowerPoint.ConnectorType.straight, {
+                        left: 0,
+                        top: positionPt,
+                        width: slideWidth,
+                        height: 0
+                    });
+                }
+                
+                // Linie formatieren
+                line.name = GUIDELINE_TAG + "_" + guideline.type + "_" + guideline.gridUnits;
+                line.lineFormat.color = "FF0000"; // Rot
+                line.lineFormat.weight = lineWeight;
+                line.lineFormat.dashStyle = PowerPoint.ShapeLineDashStyle.solid;
+            });
+        });
+        
+        return context.sync().then(function () {
+            showStatus("Hilfslinien in allen Mastern eingeblendet ✓", "success");
+        });
+    });
+}
+
+function removeGuidelines(context, masters) {
+    var deletePromises = [];
+    
+    masters.forEach(function (master) {
+        var shapes = master.shapes;
+        shapes.load("items");
+        deletePromises.push(context.sync().then(function () {
+            for (var i = 0; i < shapes.items.length; i++) {
+                shapes.items[i].load("name");
+            }
+            return context.sync().then(function () {
+                for (var i = 0; i < shapes.items.length; i++) {
+                    if (shapes.items[i].name && shapes.items[i].name.indexOf(GUIDELINE_TAG) === 0) {
+                        shapes.items[i].delete();
+                    }
+                }
+            });
+        }));
+    });
+    
+    return Promise.all(deletePromises).then(function () {
+        return context.sync().then(function () {
+            showStatus("Hilfslinien aus allen Mastern entfernt ✓", "success");
+        });
     });
 }
