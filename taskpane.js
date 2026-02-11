@@ -76,6 +76,11 @@ function initUI() {
     document.getElementById("snapSize").addEventListener("click", function () { snapToGrid("size"); });
     document.getElementById("snapBoth").addEventListener("click", function () { snapToGrid("both"); });
     document.getElementById("showInfo").addEventListener("click", function () { showShapeInfo(); });
+    
+    // NEU: Feste Abstände setzen
+    document.getElementById("setSpacingH").addEventListener("click", function () { setFixedSpacing("horizontal"); });
+    document.getElementById("setSpacingV").addEventListener("click", function () { setFixedSpacing("vertical"); });
+    
     document.getElementById("matchWidthMax").addEventListener("click", function () { matchDimension("width", "max"); });
     document.getElementById("matchWidthMin").addEventListener("click", function () { matchDimension("width", "min"); });
     document.getElementById("matchHeightMax").addEventListener("click", function () { matchDimension("height", "max"); });
@@ -238,6 +243,38 @@ function snapToGrid(mode) {
                 if (mode === "size" || mode === "both") { var nw = roundToGrid(pointsToCm(s.width)); var nh = roundToGrid(pointsToCm(s.height)); if (nw >= MIN_SIZE_CM) s.width = cmToPoints(nw); if (nh >= MIN_SIZE_CM) s.height = cmToPoints(nh); }
             });
             return context.sync().then(function () { showStatus((mode === "both" ? "Position & Größe" : mode === "position" ? "Position" : "Größe") + " am Raster ausgerichtet ✓", "success"); });
+        });
+    });
+}
+
+// ===== TAB 2: SET FIXED SPACING (NEU) =====
+function setFixedSpacing(direction) {
+    withSelectedShapes(2, function (context, items) {
+        items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
+        return context.sync().then(function () {
+            var spacing = cmToPoints(gridUnitCm);
+            
+            if (direction === "horizontal") {
+                // Sortiere Objekte von links nach rechts
+                var sorted = items.slice().sort(function (a, b) { return a.left - b.left; });
+                // Erstes Objekt bleibt an Position, alle folgenden werden verschoben
+                for (var i = 1; i < sorted.length; i++) {
+                    sorted[i].left = sorted[i - 1].left + sorted[i - 1].width + spacing;
+                }
+                return context.sync().then(function () {
+                    showStatus("Horizontale Abstände auf " + gridUnitCm.toFixed(2) + " cm gesetzt ✓", "success");
+                });
+            } else if (direction === "vertical") {
+                // Sortiere Objekte von oben nach unten
+                var sorted = items.slice().sort(function (a, b) { return a.top - b.top; });
+                // Erstes Objekt bleibt an Position, alle folgenden werden verschoben
+                for (var i = 1; i < sorted.length; i++) {
+                    sorted[i].top = sorted[i - 1].top + sorted[i - 1].height + spacing;
+                }
+                return context.sync().then(function () {
+                    showStatus("Vertikale Abstände auf " + gridUnitCm.toFixed(2) + " cm gesetzt ✓", "success");
+                });
+            }
         });
     });
 }
