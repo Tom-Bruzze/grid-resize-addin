@@ -402,14 +402,16 @@ function matchDimension(dimension, mode) {
             var heights = items.map(function (s) { return s.height; });
             var targetW = mode === "max" ? Math.max.apply(null, widths) : Math.min.apply(null, widths);
             var targetH = mode === "max" ? Math.max.apply(null, heights) : Math.min.apply(null, heights);
-            items.forEach(function (shape) {
-                if (dimension === "width" || dimension === "both") shape.width = targetW;
-                if (dimension === "height" || dimension === "both") shape.height = targetH;
+
+            items.forEach(function (s) {
+                if (dimension === "width" || dimension === "both") { s.width = targetW; }
+                if (dimension === "height" || dimension === "both") { s.height = targetH; }
             });
+
             return context.sync().then(function () {
-                var modeText = mode === "max" ? "größtes" : "kleinstes";
+                var modeText = mode === "max" ? "größten" : "kleinsten";
                 var dimText = dimension === "both" ? "Größe" : (dimension === "width" ? "Breite" : "Höhe");
-                showStatus("Alle auf " + dimText + " des " + modeText + "n Objekts ✓", "success");
+                showStatus("Alle auf " + dimText + " des " + modeText + " Objekts ✔", "success");
             });
         });
     });
@@ -420,19 +422,49 @@ function matchDimension(dimension, mode) {
 // ===================================================================
 function proportionalMatch(mode) {
     withSelectedShapes(2, function (context, items) {
-        items.forEach(function (shape) { shape.load(["width", "height"]); });
+        items.forEach(function (s) { s.load(["width", "height"]); });
         return context.sync().then(function () {
             var widths = items.map(function (s) { return s.width; });
             var targetW = mode === "max" ? Math.max.apply(null, widths) : Math.min.apply(null, widths);
-            items.forEach(function (shape) {
-                var ratio = shape.height / shape.width;
-                shape.width = targetW;
-                shape.height = targetW * ratio;
+            items.forEach(function (s) {
+                var ratio = s.height / s.width;
+                s.width = targetW;
+                s.height = targetW * ratio;
             });
             return context.sync().then(function () {
                 var modeText = mode === "max" ? "größten" : "kleinsten";
-                showStatus("Proportional auf Breite des " + modeText + " Objekts ✓", "success");
+                showStatus("Proportional auf Breite des " + modeText + " Objekts ✔", "success");
             });
         });
+    });
+}
+
+// ===================================================================
+// EXTRAS: SET DROEGE SLIDE SIZE
+// ===================================================================
+function setDroegeSlideSize() {
+    // Droege-Format: 27,724 × 19,297 cm
+    // Breite: 27.724 × 28.3465 = 785.67 pt → gerundet 786 pt
+    // Höhe:  19.297 cm = 547 pt
+    var targetWidth = 786;
+    var targetHeight = 547;
+
+    PowerPoint.run(function (context) {
+        var pageSetup = context.presentation.pageSetup;
+        pageSetup.load(["slideWidth", "slideHeight"]);
+        return context.sync()
+            .then(function () {
+                pageSetup.slideWidth = targetWidth;
+                return context.sync();
+            })
+            .then(function () {
+                pageSetup.slideHeight = targetHeight;
+                return context.sync();
+            })
+            .then(function () {
+                showStatus("Papierformat gesetzt: 27,724 × 19,297 cm (786 × 547 pt) ✔", "success");
+            });
+    }).catch(function (error) {
+        showStatus("Fehler: " + error.message, "error");
     });
 }
