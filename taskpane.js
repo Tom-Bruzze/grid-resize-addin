@@ -76,9 +76,8 @@ function initUI() {
     document.getElementById("propMatchMax").addEventListener("click", function () { proportionalMatch("max"); });
     document.getElementById("propMatchMin").addEventListener("click", function () { proportionalMatch("min"); });
 
-    // === TAB 4: Extras buttons ===
-    document.getElementById("addShadow").addEventListener("click", function () { addShadow(); });
-    document.getElementById("removeShadow").addEventListener("click", function () { removeShadow(); });
+    // === TAB 4: Copy shadow button ===
+    document.getElementById("copyShadowText").addEventListener("click", function () { copyShadowInstructions(); });
 }
 
 // ===== Preset Button Highlight =====
@@ -279,76 +278,23 @@ function proportionalMatch(mode) {
 }
 
 // ===================================================================
-// TAB 4: ADD SHADOW (via shape.shadow properties with fallback)
+// TAB 4: COPY SHADOW INSTRUCTIONS TO CLIPBOARD
 // ===================================================================
-function addShadow() {
-    withSelectedShapes(1, function (context, items) {
-        var count = items.length;
-        items.forEach(function (shape) {
-            shape.load("shadow");
-        });
-        return context.sync().then(function () {
-            items.forEach(function (shape) {
-                try {
-                    // PowerPoint JS API shadow properties
-                    shape.shadow.visible = true;
-                    shape.shadow.type = "Outer";
-                    shape.shadow.color = "#808080";      // Schwarz 50% = Grau
-                    shape.shadow.transparency = 0.30;     // 30% Transparenz
-                    shape.shadow.size = 100;              // 100%
-                    shape.shadow.blur = 0.5;              // 0.5 Pt.
-                    shape.shadow.angle = 45;              // 45°
-                    shape.shadow.distance = 1;            // 1 Pt.
-                } catch (e) {
-                    // Fallback: try alternate property names
-                    try {
-                        var shadow = shape.shadow;
-                        shadow.showShadow = true;
-                        shadow.style = "Outer";
-                        shadow.color = "#808080";
-                        shadow.transparency = 0.30;
-                        shadow.blur = 0.5;
-                        shadow.angle = 45;
-                        shadow.distance = 1;
-                    } catch (e2) {
-                        // Will be caught by outer catch
-                        throw new Error("Shadow-API nicht verfügbar. Bitte Schatten manuell setzen: Format > Formeffekte > Schatten");
-                    }
-                }
-            });
-            return context.sync().then(function () {
-                var text = count === 1 ? "1 Objekt" : count + " Objekte";
-                showStatus("Schatten hinzugefügt (" + text + ") ✓", "success");
-            });
-        });
-    });
-}
-
-// ===================================================================
-// TAB 4: REMOVE SHADOW
-// ===================================================================
-function removeShadow() {
-    withSelectedShapes(1, function (context, items) {
-        var count = items.length;
-        items.forEach(function (shape) {
-            shape.load("shadow");
-        });
-        return context.sync().then(function () {
-            items.forEach(function (shape) {
-                try {
-                    shape.shadow.visible = false;
-                } catch (e) {
-                    try {
-                        shape.shadow.showShadow = false;
-                    } catch (e2) {
-                        throw new Error("Shadow-API nicht verfügbar. Bitte Schatten manuell entfernen.");
-                    }
-                }
-            });
-            return context.sync().then(function () {
-                var text = count === 1 ? "1 Objekt" : count + " Objekte";
-                showStatus("Schatten entfernt (" + text + ") ✓", "success");
-            });
-        });
+function copyShadowInstructions() {
+    var text = "Schatten-Einstellungen (Droege Group Standard):\n" +
+        "─────────────────────────────────\n" +
+        "Typ: Offset unten rechts\n" +
+        "Farbe: Schwarz 50% (= #808080)\n" +
+        "Transparenz: 30%\n" +
+        "Größe: 100%\n" +
+        "Weichzeichnen: 0,5 Pt.\n" +
+        "Winkel: 45°\n" +
+        "Abstand: 1 Pt.\n" +
+        "─────────────────────────────────\n" +
+        "Pfad: Objekt rechtsklick → Form formatieren → Effekte → Schatten";
+    navigator.clipboard.writeText(text).then(function () {
+        showStatus("Schatten-Werte in Zwischenablage kopiert ✓", "success");
+    }).catch(function () {
+        showStatus("Kopieren fehlgeschlagen – bitte manuell kopieren", "error");
     });
 }
