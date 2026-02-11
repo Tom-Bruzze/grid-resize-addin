@@ -394,14 +394,14 @@ function toggleGuidelines() {
 
 function addGuidelines(context, masters) {
     var guidelinePositions = [
-        { type: "vertical", gridUnits: 9 },
-        { type: "vertical", gridUnits: 128 },
+        { type: "vertical", gridUnits: 8 },
+        { type: "vertical", gridUnits: 127 },
         { type: "horizontal", gridUnits: 5 },
         { type: "horizontal", gridUnits: 9 },
         { type: "horizontal", gridUnits: 11 },
-        { type: "horizontal", gridUnits: 14 },
+        { type: "horizontal", gridUnits: 15 },
         { type: "horizontal", gridUnits: 17 },
-        { type: "horizontal", gridUnits: 84 }
+        { type: "horizontal", gridUnits: 86 }
     ];
     
     // Erhöht auf 1 pt für bessere Sichtbarkeit
