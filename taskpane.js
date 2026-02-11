@@ -350,7 +350,7 @@ function setDroegeSlideSize() {
     });
 }
 
-// ===== EXTRAS: TOGGLE GUIDELINES (KORRIGIERT - Rechtecke statt Linien) =====
+// ===== EXTRAS: TOGGLE GUIDELINES (FINAL FIX - Gerundete Positionen + dickere Linien) =====
 function toggleGuidelines() {
     PowerPoint.run(function (context) {
         var masters = context.presentation.slideMasters;
@@ -404,7 +404,8 @@ function addGuidelines(context, masters) {
         { type: "horizontal", gridUnits: 84 }
     ];
     
-    var lineWeightPt = 0.3;
+    // Erhöht auf 1 pt für bessere Sichtbarkeit
+    var lineWeightPt = 1.0;
     
     var pageSetup = context.presentation.pageSetup;
     pageSetup.load(["slideWidth", "slideHeight"]);
@@ -415,21 +416,22 @@ function addGuidelines(context, masters) {
         
         masters.forEach(function (master) {
             guidelinePositions.forEach(function (guideline) {
-                var positionPt = cmToPoints(guideline.gridUnits * gridUnitCm);
+                // Position berechnen und auf ganze Points runden
+                var positionPt = Math.round(cmToPoints(guideline.gridUnits * gridUnitCm));
                 var shape;
                 
                 if (guideline.type === "vertical") {
-                    // Vertikale Linie als sehr schmales Rechteck
+                    // Vertikale Linie als schmales Rechteck
                     shape = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
-                    shape.left = positionPt - (lineWeightPt / 2);
+                    shape.left = positionPt - Math.round(lineWeightPt / 2);
                     shape.top = 0;
                     shape.width = lineWeightPt;
                     shape.height = slideHeight;
                 } else {
-                    // Horizontale Linie als sehr flaches Rechteck
+                    // Horizontale Linie als flaches Rechteck
                     shape = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
                     shape.left = 0;
-                    shape.top = positionPt - (lineWeightPt / 2);
+                    shape.top = positionPt - Math.round(lineWeightPt / 2);
                     shape.width = slideWidth;
                     shape.height = lineWeightPt;
                 }
@@ -437,7 +439,7 @@ function addGuidelines(context, masters) {
                 // Formatierung
                 shape.name = GUIDELINE_TAG + "_" + guideline.type + "_" + guideline.gridUnits;
                 shape.fill.setSolidColor("FF0000"); // Rot
-                shape.lineFormat.visible = false; // Kein Rahmen um das Rechteck
+                shape.lineFormat.visible = false; // Kein Rahmen
             });
         });
         
