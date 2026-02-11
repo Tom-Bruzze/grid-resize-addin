@@ -350,7 +350,7 @@ function setDroegeSlideSize() {
     });
 }
 
-// ===== EXTRAS: TOGGLE GUIDELINES (FINAL FIX - Gerundete Positionen + dickere Linien) =====
+// ===== EXTRAS: TOGGLE GUIDELINES (AKTUALISIERTE POSITIONEN) =====
 function toggleGuidelines() {
     PowerPoint.run(function (context) {
         var masters = context.presentation.slideMasters;
@@ -393,18 +393,18 @@ function toggleGuidelines() {
 }
 
 function addGuidelines(context, masters) {
+    // AKTUALISIERTE POSITIONEN
     var guidelinePositions = [
-        { type: "vertical", gridUnits: 9 },
-        { type: "vertical", gridUnits: 128 },
+        { type: "vertical", gridUnits: 8 },
+        { type: "vertical", gridUnits: 126 },
         { type: "horizontal", gridUnits: 5 },
         { type: "horizontal", gridUnits: 9 },
-        { type: "horizontal", gridUnits: 11 },
-        { type: "horizontal", gridUnits: 14 },
+        { type: "horizontal", gridUnits: 15 },
         { type: "horizontal", gridUnits: 17 },
-        { type: "horizontal", gridUnits: 84 }
+        { type: "horizontal", gridUnits: 86 }
     ];
     
-    // Erhöht auf 1 pt für bessere Sichtbarkeit
+    // Linienstärke 1 pt
     var lineWeightPt = 1.0;
     
     var pageSetup = context.presentation.pageSetup;
