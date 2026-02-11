@@ -1,69 +1,56 @@
 /* ===== Grid Resize Tool - JavaScript ===== */
-/* iPad-safe: Runtime-Check für PowerPointApi 1.5 (getSelectedShapes) */
+
+// Constants
 var CM_TO_POINTS = 28.3465;
 var MIN_SIZE_CM = 0.1;
-var gridUnitCm = 0.21;
-var apiAvailable = false;
 
+// State
+var gridUnitCm = 0.21;
+
+// ===== Office Init =====
 Office.onReady(function (info) {
     if (info.host === Office.HostType.PowerPoint) {
-        /* Prüfe ob PowerPointApi 1.5 verfügbar ist (getSelectedShapes) */
-        if (Office.context.requirements && Office.context.requirements.isSetSupported) {
-            apiAvailable = Office.context.requirements.isSetSupported("PowerPointApi", "1.5");
-        } else {
-            /* Fallback: direkt testen ob getSelectedShapes existiert */
-            apiAvailable = (typeof PowerPoint !== "undefined" &&
-                            PowerPoint.run &&
-                            typeof PowerPoint.run === "function");
-        }
-
         initUI();
-
-        if (!apiAvailable) {
-            showPlatformWarning();
-        }
     }
 });
 
-function showPlatformWarning() {
-    var banner = document.createElement("div");
-    banner.id = "platformBanner";
-    banner.style.cssText = "background:#FFF3CD;border:1px solid #FFECB5;border-radius:8px;padding:12px 16px;margin:8px 0 12px;color:#664D03;font-size:13px;line-height:1.5;";
-    banner.innerHTML = '<strong style="display:block;margin-bottom:4px;">⚠️ Eingeschränkte Plattform</strong>' +
-        'Dieses Gerät unterstützt <strong>PowerPointApi 1.5</strong> nicht. ' +
-        'Die Shape-Manipulation (Größe ändern, Raster, Angleichen) ist leider <strong>nur auf Desktop & Web</strong> verfügbar.<br><br>' +
-        '<span style="font-size:12px;opacity:0.8;">iPad / iOS unterstützt derzeit max. PowerPointApi 1.1, ' +
-        'welche keine getSelectedShapes() API bietet.</span>';
-    var container = document.querySelector(".main-content") || document.querySelector(".container") || document.body;
-    if (container.firstChild) {
-        container.insertBefore(banner, container.firstChild);
-    } else {
-        container.appendChild(banner);
-    }
-}
-
 function initUI() {
+    // Grid unit input
     var gridInput = document.getElementById("gridUnit");
     gridInput.addEventListener("change", function () {
         var val = parseFloat(this.value);
-        if (!isNaN(val) && val > 0) { gridUnitCm = val; updatePresetButtons(val); showStatus("Rastereinheit: " + val.toFixed(2) + " cm", "info"); }
+        if (!isNaN(val) && val > 0) {
+            gridUnitCm = val;
+            updatePresetButtons(val);
+            showStatus("Rastereinheit: " + val.toFixed(2) + " cm", "info");
+        }
     });
-    document.querySelectorAll(".preset-btn").forEach(function (btn) {
+
+    // Preset buttons
+    var presets = document.querySelectorAll(".preset-btn");
+    presets.forEach(function (btn) {
         btn.addEventListener("click", function () {
             var val = parseFloat(this.getAttribute("data-value"));
-            gridUnitCm = val; gridInput.value = val; updatePresetButtons(val);
+            gridUnitCm = val;
+            gridInput.value = val;
+            updatePresetButtons(val);
             showStatus("Rastereinheit: " + val.toFixed(2) + " cm", "info");
         });
     });
-    document.querySelectorAll(".tab-btn").forEach(function (btn) {
+
+    // Tab navigation
+    var tabBtns = document.querySelectorAll(".tab-btn");
+    tabBtns.forEach(function (btn) {
         btn.addEventListener("click", function () {
             var tabId = this.getAttribute("data-tab");
-            document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.remove("active"); });
+            tabBtns.forEach(function (b) { b.classList.remove("active"); });
             document.querySelectorAll(".tab-content").forEach(function (t) { t.classList.remove("active"); });
             this.classList.add("active");
             document.getElementById(tabId).classList.add("active");
         });
     });
+
+    // === TAB 1: Resize buttons ===
     document.getElementById("shrinkWidth").addEventListener("click", function () { resizeShapes("width", -gridUnitCm); });
     document.getElementById("growWidth").addEventListener("click", function () { resizeShapes("width", gridUnitCm); });
     document.getElementById("shrinkHeight").addEventListener("click", function () { resizeShapes("height", -gridUnitCm); });
@@ -72,10 +59,14 @@ function initUI() {
     document.getElementById("growBoth").addEventListener("click", function () { resizeShapes("both", gridUnitCm); });
     document.getElementById("propShrink").addEventListener("click", function () { proportionalResize(-gridUnitCm); });
     document.getElementById("propGrow").addEventListener("click", function () { proportionalResize(gridUnitCm); });
+
+    // === TAB 2: Snap buttons ===
     document.getElementById("snapPosition").addEventListener("click", function () { snapToGrid("position"); });
     document.getElementById("snapSize").addEventListener("click", function () { snapToGrid("size"); });
     document.getElementById("snapBoth").addEventListener("click", function () { snapToGrid("both"); });
     document.getElementById("showInfo").addEventListener("click", function () { showShapeInfo(); });
+
+    // === TAB 3: Align buttons ===
     document.getElementById("matchWidthMax").addEventListener("click", function () { matchDimension("width", "max"); });
     document.getElementById("matchWidthMin").addEventListener("click", function () { matchDimension("width", "min"); });
     document.getElementById("matchHeightMax").addEventListener("click", function () { matchDimension("height", "max"); });
@@ -84,237 +75,364 @@ function initUI() {
     document.getElementById("matchBothMin").addEventListener("click", function () { matchDimension("both", "min"); });
     document.getElementById("propMatchMax").addEventListener("click", function () { proportionalMatch("max"); });
     document.getElementById("propMatchMin").addEventListener("click", function () { proportionalMatch("min"); });
-    document.getElementById("setSlideSize").addEventListener("click", function () { setDroegeSlideSize(); });
-
-    // Schatten-Werte kopieren
-    var copyBtn = document.getElementById("copyShadowText");
-    if (copyBtn) {
-        copyBtn.addEventListener("click", function () {
-            var text = "Schatten-Standardwerte:\n" +
-                "Farbe: Schwarz\n" +
-                "Transparenz: 75 %\n" +
-                "Größe: 100 %\n" +
-                "Weichzeichnen: 4 pt\n" +
-                "Winkel: 90°\n" +
-                "Abstand: 1 pt";
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(function () {
-                    showStatus("Schatten-Werte kopiert ✓", "success");
-                }).catch(function () {
-                    showStatus("Kopieren fehlgeschlagen", "error");
-                });
-            } else {
-                showStatus("Zwischenablage nicht verfügbar", "error");
-            }
-        });
-    }
 }
 
+// ===== Preset Button Highlight =====
 function updatePresetButtons(val) {
     document.querySelectorAll(".preset-btn").forEach(function (btn) {
-        btn.classList.toggle("active", Math.abs(parseFloat(btn.getAttribute("data-value")) - val) < 0.001);
+        var bv = parseFloat(btn.getAttribute("data-value"));
+        btn.classList.toggle("active", Math.abs(bv - val) < 0.001);
     });
 }
 
+// ===== Status Messages =====
 function showStatus(message, type) {
     var el = document.getElementById("status");
     el.textContent = message;
     el.className = "status visible " + (type || "info");
-    setTimeout(function () { el.classList.remove("visible"); }, 3000);
+    setTimeout(function () {
+        el.classList.remove("visible");
+    }, 3000);
 }
 
+// ===== Helper Functions =====
 function cmToPoints(cm) { return cm * CM_TO_POINTS; }
 function pointsToCm(pts) { return pts / CM_TO_POINTS; }
 function roundToGrid(valueCm) { return Math.round(valueCm / gridUnitCm) * gridUnitCm; }
 
-/* ===== KERN-FUNKTION: mit API-Check ===== */
+// ===== Get Selected Shapes Helper =====
 function withSelectedShapes(minCount, callback) {
-    if (!apiAvailable) {
-        showStatus("Diese Funktion wird auf diesem Gerät leider nicht unterstützt (PowerPointApi 1.5 erforderlich).", "error");
-        return;
-    }
     PowerPoint.run(function (context) {
         var shapes = context.presentation.getSelectedShapes();
         shapes.load("items");
         return context.sync().then(function () {
             if (shapes.items.length < minCount) {
-                showStatus(minCount <= 1 ? "Bitte Objekt(e) auswählen!" : "Bitte mindestens " + minCount + " Objekte auswählen!", "error");
+                var msg = minCount <= 1 ? "Bitte Objekt(e) auswählen!" : "Bitte mindestens " + minCount + " Objekte auswählen!";
+                showStatus(msg, "error");
                 return;
             }
             return callback(context, shapes.items);
         });
-    }).catch(function (error) { showStatus("Fehler: " + error.message, "error"); });
+    }).catch(function (error) {
+        showStatus("Fehler: " + error.message, "error");
+    });
 }
 
-// ===== TAB 1: RESIZE (spacing preserved for 2+ shapes) =====
+// ===================================================================
+// TAB 1: RESIZE SHAPES (with spacing preservation for multiple shapes)
+// ===================================================================
 function resizeShapes(dimension, deltaCm) {
     withSelectedShapes(1, function (context, items) {
-        items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
+        items.forEach(function (shape) { shape.load(["left", "top", "width", "height"]); });
         return context.sync().then(function () {
-            var dp = cmToPoints(Math.abs(deltaCm));
-            var grow = deltaCm > 0;
+            var deltaPoints = cmToPoints(Math.abs(deltaCm));
+            var growing = deltaCm > 0;
 
+            // === Single shape: simple resize (no spacing logic needed) ===
             if (items.length === 1) {
-                var s = items[0];
-                if (dimension === "width" || dimension === "both") { var nw = grow ? s.width + dp : s.width - dp; if (nw >= cmToPoints(MIN_SIZE_CM)) s.width = nw; }
-                if (dimension === "height" || dimension === "both") { var nh = grow ? s.height + dp : s.height - dp; if (nh >= cmToPoints(MIN_SIZE_CM)) s.height = nh; }
+                var shape = items[0];
+                if (dimension === "width" || dimension === "both") {
+                    var newW = growing ? shape.width + deltaPoints : shape.width - deltaPoints;
+                    if (newW >= cmToPoints(MIN_SIZE_CM)) shape.width = newW;
+                }
+                if (dimension === "height" || dimension === "both") {
+                    var newH = growing ? shape.height + deltaPoints : shape.height - deltaPoints;
+                    if (newH >= cmToPoints(MIN_SIZE_CM)) shape.height = newH;
+                }
                 return context.sync().then(function () {
-                    showStatus((dimension === "both" ? "Breite & Höhe" : dimension === "width" ? "Breite" : "Höhe") + (grow ? " vergrößert" : " verkleinert") + " (" + Math.abs(deltaCm).toFixed(2) + " cm)", "success");
+                    var action = growing ? "vergrößert" : "verkleinert";
+                    var dimText = dimension === "both" ? "Breite & Höhe" : (dimension === "width" ? "Breite" : "Höhe");
+                    showStatus(dimText + " " + action + " (" + Math.abs(deltaCm).toFixed(2) + " cm)", "success");
                 });
             }
 
-            // Multiple shapes: resize + preserve spacing
+            // === Multiple shapes: resize + preserve spacing ===
+
+            // Horizontal spacing preservation (for width changes)
             if (dimension === "width" || dimension === "both") {
-                var hs = items.slice().sort(function (a, b) { return a.left - b.left; });
-                var hg = [];
-                for (var i = 0; i < hs.length - 1; i++) hg.push(hs[i + 1].left - (hs[i].left + hs[i].width));
-                var hOk = true;
-                for (var i = 0; i < hs.length; i++) { if ((grow ? hs[i].width + dp : hs[i].width - dp) < cmToPoints(MIN_SIZE_CM)) { hOk = false; break; } }
-                if (hOk) {
-                    for (var i = 0; i < hs.length; i++) hs[i].width = grow ? hs[i].width + dp : hs[i].width - dp;
-                    for (var i = 1; i < hs.length; i++) hs[i].left = hs[i - 1].left + hs[i - 1].width + hg[i - 1];
+                // Sort by left position
+                var hSorted = items.slice().sort(function (a, b) { return a.left - b.left; });
+
+                // Calculate gaps between shapes (right edge of shape[i] to left edge of shape[i+1])
+                var hGaps = [];
+                for (var i = 0; i < hSorted.length - 1; i++) {
+                    var rightEdge = hSorted[i].left + hSorted[i].width;
+                    var gap = hSorted[i + 1].left - rightEdge;
+                    hGaps.push(gap);
+                }
+
+                // Resize all shapes horizontally
+                var hResizeValid = true;
+                for (var i = 0; i < hSorted.length; i++) {
+                    var newW = growing ? hSorted[i].width + deltaPoints : hSorted[i].width - deltaPoints;
+                    if (newW < cmToPoints(MIN_SIZE_CM)) {
+                        hResizeValid = false;
+                        break;
+                    }
+                }
+
+                if (hResizeValid) {
+                    for (var i = 0; i < hSorted.length; i++) {
+                        var newW = growing ? hSorted[i].width + deltaPoints : hSorted[i].width - deltaPoints;
+                        hSorted[i].width = newW;
+                    }
+
+                    // Reposition shapes to preserve gaps
+                    // First shape keeps its position, subsequent shapes shift
+                    for (var i = 1; i < hSorted.length; i++) {
+                        var prevRightEdge = hSorted[i - 1].left + hSorted[i - 1].width;
+                        hSorted[i].left = prevRightEdge + hGaps[i - 1];
+                    }
                 }
             }
+
+            // Vertical spacing preservation (for height changes)
             if (dimension === "height" || dimension === "both") {
-                var vs = items.slice().sort(function (a, b) { return a.top - b.top; });
-                var vg = [];
-                for (var i = 0; i < vs.length - 1; i++) vg.push(vs[i + 1].top - (vs[i].top + vs[i].height));
-                var vOk = true;
-                for (var i = 0; i < vs.length; i++) { if ((grow ? vs[i].height + dp : vs[i].height - dp) < cmToPoints(MIN_SIZE_CM)) { vOk = false; break; } }
-                if (vOk) {
-                    for (var i = 0; i < vs.length; i++) vs[i].height = grow ? vs[i].height + dp : vs[i].height - dp;
-                    for (var i = 1; i < vs.length; i++) vs[i].top = vs[i - 1].top + vs[i - 1].height + vg[i - 1];
+                // Sort by top position
+                var vSorted = items.slice().sort(function (a, b) { return a.top - b.top; });
+
+                // Calculate gaps between shapes (bottom edge of shape[i] to top edge of shape[i+1])
+                var vGaps = [];
+                for (var i = 0; i < vSorted.length - 1; i++) {
+                    var bottomEdge = vSorted[i].top + vSorted[i].height;
+                    var gap = vSorted[i + 1].top - bottomEdge;
+                    vGaps.push(gap);
+                }
+
+                // Resize all shapes vertically
+                var vResizeValid = true;
+                for (var i = 0; i < vSorted.length; i++) {
+                    var newH = growing ? vSorted[i].height + deltaPoints : vSorted[i].height - deltaPoints;
+                    if (newH < cmToPoints(MIN_SIZE_CM)) {
+                        vResizeValid = false;
+                        break;
+                    }
+                }
+
+                if (vResizeValid) {
+                    for (var i = 0; i < vSorted.length; i++) {
+                        var newH = growing ? vSorted[i].height + deltaPoints : vSorted[i].height - deltaPoints;
+                        vSorted[i].height = newH;
+                    }
+
+                    // Reposition shapes to preserve gaps
+                    for (var i = 1; i < vSorted.length; i++) {
+                        var prevBottomEdge = vSorted[i - 1].top + vSorted[i - 1].height;
+                        vSorted[i].top = prevBottomEdge + vGaps[i - 1];
+                    }
                 }
             }
+
             return context.sync().then(function () {
-                showStatus((dimension === "both" ? "Breite & Höhe" : dimension === "width" ? "Breite" : "Höhe") + (grow ? " vergrößert" : " verkleinert") + " – Abstände beibehalten", "success");
+                var action = growing ? "vergrößert" : "verkleinert";
+                var dimText = dimension === "both" ? "Breite & Höhe" : (dimension === "width" ? "Breite" : "Höhe");
+                showStatus(dimText + " " + action + " – Abstände beibehalten (" + Math.abs(deltaCm).toFixed(2) + " cm)", "success");
             });
         });
     });
 }
 
-// ===== TAB 1: PROPORTIONAL RESIZE (spacing preserved for 2+ shapes) =====
+// ===================================================================
+// TAB 1: PROPORTIONAL RESIZE (with spacing preservation)
+// ===================================================================
 function proportionalResize(deltaCm) {
     withSelectedShapes(1, function (context, items) {
-        items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
+        items.forEach(function (shape) { shape.load(["left", "top", "width", "height"]); });
         return context.sync().then(function () {
-            var dp = cmToPoints(Math.abs(deltaCm));
-            var grow = deltaCm > 0;
+            var deltaPoints = cmToPoints(Math.abs(deltaCm));
+            var growing = deltaCm > 0;
 
+            // === Single shape: simple proportional resize ===
             if (items.length === 1) {
-                var s = items[0], r = s.height / s.width;
-                var nw = grow ? s.width + dp : s.width - dp;
-                if (nw >= cmToPoints(MIN_SIZE_CM)) { var nh = nw * r; if (nh >= cmToPoints(MIN_SIZE_CM)) { s.width = nw; s.height = nh; } }
-                return context.sync().then(function () { showStatus("Proportional " + (grow ? "vergrößert" : "verkleinert") + " (" + Math.abs(deltaCm).toFixed(2) + " cm)", "success"); });
+                var shape = items[0];
+                var ratio = shape.height / shape.width;
+                var newW = growing ? shape.width + deltaPoints : shape.width - deltaPoints;
+                if (newW >= cmToPoints(MIN_SIZE_CM)) {
+                    var newH = newW * ratio;
+                    if (newH >= cmToPoints(MIN_SIZE_CM)) {
+                        shape.width = newW;
+                        shape.height = newH;
+                    }
+                }
+                return context.sync().then(function () {
+                    var action = growing ? "vergrößert" : "verkleinert";
+                    showStatus("Proportional " + action + " (" + Math.abs(deltaCm).toFixed(2) + " cm)", "success");
+                });
             }
 
-            // Multiple shapes
-            var orig = items.map(function (s) { return { shape: s, left: s.left, top: s.top, width: s.width, height: s.height, ratio: s.height / s.width }; });
-            var ok = true;
-            orig.forEach(function (o) { var nw = grow ? o.width + dp : o.width - dp; if (nw < cmToPoints(MIN_SIZE_CM) || nw * o.ratio < cmToPoints(MIN_SIZE_CM)) ok = false; });
-            if (!ok) { showStatus("Mindestgröße erreicht!", "error"); return context.sync(); }
+            // === Multiple shapes: proportional resize + preserve spacing ===
 
-            var hs = orig.slice().sort(function (a, b) { return a.left - b.left; });
-            var hg = []; for (var i = 0; i < hs.length - 1; i++) hg.push(hs[i + 1].left - (hs[i].left + hs[i].width));
-            var vs = orig.slice().sort(function (a, b) { return a.top - b.top; });
-            var vg = []; for (var i = 0; i < vs.length - 1; i++) vg.push(vs[i + 1].top - (vs[i].top + vs[i].height));
+            // Store original values and compute ratios
+            var originals = items.map(function (shape) {
+                return {
+                    shape: shape,
+                    left: shape.left,
+                    top: shape.top,
+                    width: shape.width,
+                    height: shape.height,
+                    ratio: shape.height / shape.width
+                };
+            });
 
-            orig.forEach(function (o) { var nw = grow ? o.width + dp : o.width - dp; o.nw = nw; o.nh = nw * o.ratio; o.shape.width = nw; o.shape.height = o.nh; });
-            for (var i = 1; i < hs.length; i++) hs[i].shape.left = hs[i - 1].shape.left + hs[i - 1].nw + hg[i - 1];
-            for (var i = 1; i < vs.length; i++) vs[i].shape.top = vs[i - 1].shape.top + vs[i - 1].nh + vg[i - 1];
+            // Check if all shapes can be resized
+            var allValid = true;
+            originals.forEach(function (o) {
+                var newW = growing ? o.width + deltaPoints : o.width - deltaPoints;
+                var newH = newW * o.ratio;
+                if (newW < cmToPoints(MIN_SIZE_CM) || newH < cmToPoints(MIN_SIZE_CM)) {
+                    allValid = false;
+                }
+            });
 
-            return context.sync().then(function () { showStatus("Proportional " + (grow ? "vergrößert" : "verkleinert") + " – Abstände beibehalten", "success"); });
+            if (!allValid) {
+                showStatus("Mindestgröße erreicht!", "error");
+                return context.sync();
+            }
+
+            // --- Horizontal spacing ---
+            var hSorted = originals.slice().sort(function (a, b) { return a.left - b.left; });
+            var hGaps = [];
+            for (var i = 0; i < hSorted.length - 1; i++) {
+                var rightEdge = hSorted[i].left + hSorted[i].width;
+                hGaps.push(hSorted[i + 1].left - rightEdge);
+            }
+
+            // --- Vertical spacing ---
+            var vSorted = originals.slice().sort(function (a, b) { return a.top - b.top; });
+            var vGaps = [];
+            for (var i = 0; i < vSorted.length - 1; i++) {
+                var bottomEdge = vSorted[i].top + vSorted[i].height;
+                vGaps.push(vSorted[i + 1].top - bottomEdge);
+            }
+
+            // Resize all shapes
+            originals.forEach(function (o) {
+                var newW = growing ? o.width + deltaPoints : o.width - deltaPoints;
+                var newH = newW * o.ratio;
+                o.shape.width = newW;
+                o.shape.height = newH;
+                o.newWidth = newW;
+                o.newHeight = newH;
+            });
+
+            // Reposition horizontally (preserve gaps)
+            for (var i = 1; i < hSorted.length; i++) {
+                var prevRight = hSorted[i - 1].shape.left + hSorted[i - 1].newWidth;
+                hSorted[i].shape.left = prevRight + hGaps[i - 1];
+            }
+
+            // Reposition vertically (preserve gaps)
+            for (var i = 1; i < vSorted.length; i++) {
+                var prevBottom = vSorted[i - 1].shape.top + vSorted[i - 1].newHeight;
+                vSorted[i].shape.top = prevBottom + vGaps[i - 1];
+            }
+
+            return context.sync().then(function () {
+                var action = growing ? "vergrößert" : "verkleinert";
+                showStatus("Proportional " + action + " – Abstände beibehalten (" + Math.abs(deltaCm).toFixed(2) + " cm)", "success");
+            });
         });
     });
 }
 
-// ===== TAB 2: SNAP TO GRID =====
+// ===================================================================
+// TAB 2: SNAP TO GRID
+// ===================================================================
 function snapToGrid(mode) {
     withSelectedShapes(1, function (context, items) {
-        items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
+        items.forEach(function (shape) { shape.load(["left", "top", "width", "height"]); });
         return context.sync().then(function () {
-            items.forEach(function (s) {
-                if (mode === "position" || mode === "both") { s.left = cmToPoints(roundToGrid(pointsToCm(s.left))); s.top = cmToPoints(roundToGrid(pointsToCm(s.top))); }
-                if (mode === "size" || mode === "both") { var nw = roundToGrid(pointsToCm(s.width)); var nh = roundToGrid(pointsToCm(s.height)); if (nw >= MIN_SIZE_CM) s.width = cmToPoints(nw); if (nh >= MIN_SIZE_CM) s.height = cmToPoints(nh); }
+            items.forEach(function (shape) {
+                if (mode === "position" || mode === "both") {
+                    shape.left = cmToPoints(roundToGrid(pointsToCm(shape.left)));
+                    shape.top = cmToPoints(roundToGrid(pointsToCm(shape.top)));
+                }
+                if (mode === "size" || mode === "both") {
+                    var newW = roundToGrid(pointsToCm(shape.width));
+                    var newH = roundToGrid(pointsToCm(shape.height));
+                    if (newW >= MIN_SIZE_CM) shape.width = cmToPoints(newW);
+                    if (newH >= MIN_SIZE_CM) shape.height = cmToPoints(newH);
+                }
             });
-            return context.sync().then(function () { showStatus((mode === "both" ? "Position & Größe" : mode === "position" ? "Position" : "Größe") + " am Raster ausgerichtet ✓", "success"); });
+            return context.sync().then(function () {
+                var modeText = mode === "both" ? "Position & Größe" : (mode === "position" ? "Position" : "Größe");
+                showStatus(modeText + " am Raster ausgerichtet ✓", "success");
+            });
         });
     });
 }
 
-// ===== TAB 2: SHOW SHAPE INFO =====
+// ===================================================================
+// TAB 2: SHOW SHAPE INFO
+// ===================================================================
 function showShapeInfo() {
     withSelectedShapes(1, function (context, items) {
-        items.forEach(function (s) { s.load(["name", "left", "top", "width", "height"]); });
+        items.forEach(function (shape) { shape.load(["name", "left", "top", "width", "height"]); });
         return context.sync().then(function () {
-            var el = document.getElementById("infoDisplay"), html = "";
-            items.forEach(function (s, idx) {
-                if (items.length > 1) html += '<div style="font-weight:700;margin-top:' + (idx > 0 ? '8' : '0') + 'px;margin-bottom:4px;">' + (s.name || 'Objekt ' + (idx + 1)) + '</div>';
-                html += '<div class="info-item"><span class="info-label">Breite:</span><span class="info-value">' + pointsToCm(s.width).toFixed(2) + ' cm</span></div>';
-                html += '<div class="info-item"><span class="info-label">Höhe:</span><span class="info-value">' + pointsToCm(s.height).toFixed(2) + ' cm</span></div>';
-                html += '<div class="info-item"><span class="info-label">Links:</span><span class="info-value">' + pointsToCm(s.left).toFixed(2) + ' cm</span></div>';
-                html += '<div class="info-item"><span class="info-label">Oben:</span><span class="info-value">' + pointsToCm(s.top).toFixed(2) + ' cm</span></div>';
+            var infoEl = document.getElementById("infoDisplay");
+            var html = "";
+            items.forEach(function (shape, idx) {
+                var w = pointsToCm(shape.width).toFixed(2);
+                var h = pointsToCm(shape.height).toFixed(2);
+                var l = pointsToCm(shape.left).toFixed(2);
+                var t = pointsToCm(shape.top).toFixed(2);
+                if (items.length > 1) {
+                    html += '<div style="font-weight:700;margin-top:' + (idx > 0 ? '8' : '0') + 'px;margin-bottom:4px;">' + (shape.name || 'Objekt ' + (idx + 1)) + '</div>';
+                }
+                html += '<div class="info-item"><span class="info-label">Breite:</span><span class="info-value">' + w + ' cm</span></div>';
+                html += '<div class="info-item"><span class="info-label">Höhe:</span><span class="info-value">' + h + ' cm</span></div>';
+                html += '<div class="info-item"><span class="info-label">Links:</span><span class="info-value">' + l + ' cm</span></div>';
+                html += '<div class="info-item"><span class="info-label">Oben:</span><span class="info-value">' + t + ' cm</span></div>';
             });
-            el.innerHTML = html; el.classList.add("visible");
+            infoEl.innerHTML = html;
+            infoEl.classList.add("visible");
             showStatus("Objektinfo geladen ✓", "info");
         });
     });
 }
 
-// ===== TAB 3: MATCH DIMENSIONS =====
+// ===================================================================
+// TAB 3: MATCH DIMENSIONS
+// ===================================================================
 function matchDimension(dimension, mode) {
     withSelectedShapes(2, function (context, items) {
-        items.forEach(function (s) { s.load(["width", "height"]); });
+        items.forEach(function (shape) { shape.load(["width", "height"]); });
         return context.sync().then(function () {
-            var ws = items.map(function (s) { return s.width; }), hs = items.map(function (s) { return s.height; });
-            var tw = mode === "max" ? Math.max.apply(null, ws) : Math.min.apply(null, ws);
-            var th = mode === "max" ? Math.max.apply(null, hs) : Math.min.apply(null, hs);
-            items.forEach(function (s) { if (dimension === "width" || dimension === "both") s.width = tw; if (dimension === "height" || dimension === "both") s.height = th; });
-            return context.sync().then(function () { showStatus("Alle auf " + (dimension === "both" ? "Größe" : dimension === "width" ? "Breite" : "Höhe") + " des " + (mode === "max" ? "größten" : "kleinsten") + " Objekts ✓", "success"); });
+            var widths = items.map(function (s) { return s.width; });
+            var heights = items.map(function (s) { return s.height; });
+            var targetW = mode === "max" ? Math.max.apply(null, widths) : Math.min.apply(null, widths);
+            var targetH = mode === "max" ? Math.max.apply(null, heights) : Math.min.apply(null, heights);
+            items.forEach(function (shape) {
+                if (dimension === "width" || dimension === "both") shape.width = targetW;
+                if (dimension === "height" || dimension === "both") shape.height = targetH;
+            });
+            return context.sync().then(function () {
+                var modeText = mode === "max" ? "größtes" : "kleinstes";
+                var dimText = dimension === "both" ? "Größe" : (dimension === "width" ? "Breite" : "Höhe");
+                showStatus("Alle auf " + dimText + " des " + modeText + "n Objekts ✓", "success");
+            });
         });
     });
 }
 
-// ===== TAB 3: PROPORTIONAL MATCH =====
+// ===================================================================
+// TAB 3: PROPORTIONAL MATCH
+// ===================================================================
 function proportionalMatch(mode) {
     withSelectedShapes(2, function (context, items) {
-        items.forEach(function (s) { s.load(["width", "height"]); });
+        items.forEach(function (shape) { shape.load(["width", "height"]); });
         return context.sync().then(function () {
-            var ws = items.map(function (s) { return s.width; });
-            var tw = mode === "max" ? Math.max.apply(null, ws) : Math.min.apply(null, ws);
-            items.forEach(function (s) { var r = s.height / s.width; s.width = tw; s.height = tw * r; });
-            return context.sync().then(function () { showStatus("Proportional auf Breite des " + (mode === "max" ? "größten" : "kleinsten") + " Objekts ✓", "success"); });
-        });
-    });
-}
-
-// ===== EXTRAS: SET DROEGE SLIDE SIZE =====
-function setDroegeSlideSize() {
-    // Droege-Format: 27,724 cm × 19,319 cm
-    // 1 cm = 28.3465 pt
-    // Breite: 27.724 × 28.3465 = 785.67 pt → gerundet 786 pt
-    // Höhe:  19.319 × 28.3465 = 547.62 pt → gerundet 548 pt
-    var targetWidth  = 786;
-    var targetHeight = 548;
-
-    PowerPoint.run(function (context) {
-        var pageSetup = context.presentation.pageSetup;
-        pageSetup.load(["slideWidth", "slideHeight"]);
-        return context.sync()
-            .then(function () {
-                // Erst Breite setzen
-                pageSetup.slideWidth = targetWidth;
-                return context.sync();
-            })
-            .then(function () {
-                // Dann Höhe setzen
-                pageSetup.slideHeight = targetHeight;
-                return context.sync();
-            })
-            .then(function () {
-                showStatus("Papierformat gesetzt: 27,724 \u00d7 19,319 cm \u2714", "success");
+            var widths = items.map(function (s) { return s.width; });
+            var targetW = mode === "max" ? Math.max.apply(null, widths) : Math.min.apply(null, widths);
+            items.forEach(function (shape) {
+                var ratio = shape.height / shape.width;
+                shape.width = targetW;
+                shape.height = targetW * ratio;
             });
-    }).catch(function (error) {
-        showStatus("Fehler: " + error.message, "error");
+            return context.sync().then(function () {
+                var modeText = mode === "max" ? "größten" : "kleinsten";
+                showStatus("Proportional auf Breite des " + modeText + " Objekts ✓", "success");
+            });
+        });
     });
 }
