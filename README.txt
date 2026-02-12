@@ -1,43 +1,41 @@
-═══════════════════════════════════════════════════
- DROEGE Grid Resize Tool – README
-═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════
+DROEGE Grid Resize Tool – PowerPoint Add-In
+═══════════════════════════════════════════════════════════
 
- DATEIEN
-────────
- taskpane.html   – HTML-Oberfläche (3 Tabs)
- taskpane.css    – Dark Theme Styling
- taskpane.js     – Komplette Logik
+DATEIEN:
+  taskpane.html   – UI (4 Tabs: Größe, Raster, Angleich, Extras)
+  taskpane.css    – Dark-Theme Styling mit Square-Buttons
+  taskpane.js     – Komplette Logik (891 Zeilen, 25 Funktionen)
+  README.txt      – Diese Datei
 
- INSTALLATION
-─────────────
- 1. Dateien in ein PowerPoint Web Add-in einbinden
- 2. Office.js wird via CDN geladen
- 3. Erfordert PowerPointApi 1.5 (Desktop/Web)
+FEATURES:
+  ✓ Resize (W / H / W+H / Proportional) mit Multi-Row/Col Support
+  ✓ Snap to Grid (Position / Größe / Beides)
+  ✓ Spacing horizontal + vertikal (Multi-Row/Col)
+  ✓ Match Dimensions (Max/Min, proportional)
+  ✓ Grid-Tabelle erstellen (Spalten × Zeilen)
+  ✓ Papierformat: 27,728 × 19,297 cm
+  ✓ Hilfslinien im Master (Ein/Aus Toggle)
+  ✓ Schatten-Werte als Text kopieren
 
- BEDIENUNG
-──────────
- TAB 1 – RESIZE:
-   Klick    = +1 Rastereinheit (vergrößern / Max)
-   Shift    = -1 Rastereinheit (verkleinern / Min)
+BEDIENUNG:
+  • Klick         = vergrößern / Max angleichen
+  • Shift+Klick   = verkleinern / Min angleichen
+  • Multi-Select  = Resize über mehrere Zeilen/Spalten
 
- TAB 2 – GRID:
-   Snap     = Position/Größe auf Raster einrasten
-   H-Dist   = Horizontale Abstände = 1 RE
-              (funktioniert über MEHRERE ZEILEN)
-   V-Dist   = Vertikale Abstände = 1 RE
-              (funktioniert über MEHRERE SPALTEN)
-   Tabelle  = Rechteck-Raster erstellen
+MULTI-ROW/COL LOGIK:
+  Shapes werden automatisch nach Position gruppiert:
+  - Width-Resize  → Zeilen (gleiche Y-Position)
+  - Height-Resize → Spalten (gleiche X-Position)
+  - Abstände (Gaps) zwischen Shapes bleiben erhalten
 
- TAB 3 – SETUP:
-   Format   = Folienformat 27,711 x 19,297 cm
-   Guides   = Hilfslinien im Master ein/aus
-   Shadow   = Schatten-Werte kopieren
+PAPIERFORMAT:
+  27,728 cm = 786 pt (Breite)
+  19,297 cm = 547 pt (Höhe)
 
- MULTI-ROW/COL SPACING
-──────────────────────
- Objekte werden anhand ihrer Position automatisch
- in Zeilen (horizontal) bzw. Spalten (vertikal)
- gruppiert. So können z.B. 6 Objekte in einem
- 2x3 Grid auf einmal korrekt beabstandet werden.
+VORAUSSETZUNG:
+  PowerPointApi 1.5 (Desktop / Web)
 
-═══════════════════════════════════════════════════
+═══════════════════════════════════════════════════════════
+Droege Group – Grid Resize Tool
+═══════════════════════════════════════════════════════════

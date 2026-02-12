@@ -8,316 +8,228 @@
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Grid Resize</h1>
-            <p class="subtitle">Objekte rasterbasiert skalieren & ausrichten</p>
-        </div>
+<div class="app">
 
-        <!-- Settings -->
-        <div class="settings-section">
-            <label for="gridUnit">Rastereinheit (cm):</label>
-            <div class="input-row">
-                <button class="preset-btn" data-value="0.10">0,10</button>
-                <button class="preset-btn active" data-value="0.21">0,21</button>
-                <button class="preset-btn" data-value="0.50">0,50</button>
-                <button class="preset-btn" data-value="1.00">1,00</button>
-            </div>
-            <div class="custom-input-row">
-                <input type="number" id="gridUnit" value="0.21" step="0.01" min="0.01">
-                <span class="unit-label">cm</span>
-            </div>
-        </div>
-
-        <!-- Tab Navigation -->
-        <nav class="tab-nav">
-            <button class="tab-btn active" data-tab="tabSize">Größe</button>
-            <button class="tab-btn" data-tab="tabSnap">Raster</button>
-            <button class="tab-btn" data-tab="tabMatch">Angleichen</button>
-            <button class="tab-btn" data-tab="tabExtras">Extras</button>
-        </nav>
-
-        <!-- Status Bar -->
-        <div id="status" class="status"></div>
-
-        <!-- TAB 1: SIZE -->
-        <div id="tabSize" class="tab-content active">
-            <div class="controls-section">
-                <h2>Horizontale Breite</h2>
-                <div class="button-row">
-                    <button id="shrinkWidth" class="action-btn shrink-btn">
-                        <span class="icon-arrows">◀ ▶</span><br>
-                        <span class="btn-label">− Breite</span>
-                    </button>
-                    <button id="growWidth" class="action-btn grow-btn">
-                        <span class="icon-arrows">▶ ◀</span><br>
-                        <span class="btn-label">+ Breite</span>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Vertikale Höhe</h2>
-                <div class="button-row">
-                    <button id="shrinkHeight" class="action-btn shrink-btn">
-                        <span class="icon-arrows">▲ ▼</span><br>
-                        <span class="btn-label">− Höhe</span>
-                    </button>
-                    <button id="growHeight" class="action-btn grow-btn">
-                        <span class="icon-arrows">▼ ▲</span><br>
-                        <span class="btn-label">+ Höhe</span>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Beide Richtungen</h2>
-                <div class="button-row">
-                    <button id="shrinkBoth" class="action-btn shrink-btn">
-                        <span class="icon-big">⇲</span><br>
-                        <span class="btn-label">− Beides</span>
-                    </button>
-                    <button id="growBoth" class="action-btn grow-btn">
-                        <span class="icon-big">⇱</span><br>
-                        <span class="btn-label">+ Beides</span>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Proportionale Skalierung</h2>
-                <p class="hint">Skaliert Breite um Rastereinheit, Höhe passt sich proportional an.</p>
-                <div class="button-row">
-                    <button id="propShrink" class="action-btn shrink-btn">
-                        <span class="icon-big">🔍</span><br>
-                        <span class="btn-label">− Proportional</span>
-                    </button>
-                    <button id="propGrow" class="action-btn grow-btn">
-                        <span class="icon-big">🔎</span><br>
-                        <span class="btn-label">+ Proportional</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: SNAP -->
-        <div id="tabSnap" class="tab-content">
-            <div class="controls-section">
-                <h2>Position an Raster ausrichten</h2>
-                <p class="hint">Rundet die Position (links/oben) auf das nächste Vielfache der Rastereinheit.</p>
-                <button id="snapPosition" class="action-btn snap-btn full-btn">
-                    <span class="icon-big">☷</span><br>
-                    <span class="btn-label">Position einrasten</span>
-                </button>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Größe an Raster anpassen</h2>
-                <p class="hint">Rundet Breite und Höhe auf das nächste Vielfache der Rastereinheit.</p>
-                <button id="snapSize" class="action-btn snap-btn full-btn">
-                    <span class="icon-big">↔</span><br>
-                    <span class="btn-label">Größe einrasten</span>
-                </button>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Beides an Raster</h2>
-                <button id="snapBoth" class="action-btn snap-btn full-btn">
-                    <span class="icon-big">▦</span><br>
-                    <span class="btn-label">Alles einrasten</span>
-                </button>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Feste Abstände setzen</h2>
-                <p class="hint">Setzt den Abstand zwischen Objekten auf die Rastereinheit.</p>
-                <div class="button-row">
-                    <button id="setSpacingH" class="action-btn accent-btn">
-                        <span class="icon-arrows">↔</span><br>
-                        <span class="btn-label">Horizontal</span>
-                    </button>
-                    <button id="setSpacingV" class="action-btn accent-btn">
-                        <span class="icon-arrows">↕</span><br>
-                        <span class="btn-label">Vertikal</span>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Aktuelle Werte anzeigen</h2>
-                <button id="showInfo" class="action-btn info-btn full-btn">
-                    <span class="icon-big">ℹ</span><br>
-                    <span class="btn-label">Objektinfo anzeigen</span>
-                </button>
-                <div id="infoDisplay" class="info-display"></div>
-            </div>
-        </div>
-
-        <!-- TAB 3: MATCH -->
-        <div id="tabMatch" class="tab-content">
-            <div class="controls-section">
-                <h2>Gleiche Breite</h2>
-                <p class="hint">Alle ausgewählten Objekte erhalten dieselbe Breite.</p>
-                <div class="button-row">
-                    <button id="matchWidthMax" class="action-btn align-btn">
-                        <span class="icon-arrows">→</span><br>
-                        <span class="btn-label">Größtes Objekt</span>
-                    </button>
-                    <button id="matchWidthMin" class="action-btn align-btn-alt">
-                        <span class="icon-arrows">←</span><br>
-                        <span class="btn-label">Kleinstes Objekt</span>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Gleiche Höhe</h2>
-                <p class="hint">Alle ausgewählten Objekte erhalten dieselbe Höhe.</p>
-                <div class="button-row">
-                    <button id="matchHeightMax" class="action-btn align-btn">
-                        <span class="icon-arrows">↓</span><br>
-                        <span class="btn-label">Größtes Objekt</span>
-                    </button>
-                    <button id="matchHeightMin" class="action-btn align-btn-alt">
-                        <span class="icon-arrows">↑</span><br>
-                        <span class="btn-label">Kleinstes Objekt</span>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Gleiche Größe (Breite & Höhe)</h2>
-                <p class="hint">Alle ausgewählten Objekte erhalten dieselbe Breite und Höhe.</p>
-                <div class="button-row">
-                    <button id="matchBothMax" class="action-btn align-btn">
-                        <span class="icon-big">↘</span><br>
-                        <span class="btn-label">Größtes Objekt</span>
-                    </button>
-                    <button id="matchBothMin" class="action-btn align-btn-alt">
-                        <span class="icon-big">↖</span><br>
-                        <span class="btn-label">Kleinstes Objekt</span>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Proportional angleichen</h2>
-                <p class="hint">Passt alle Objekte proportional an die Breite des kleinsten oder größten Objekts an.</p>
-                <div class="button-row">
-                    <button id="propMatchMax" class="action-btn align-btn">
-                        <span class="icon-big">↘</span><br>
-                        <span class="btn-label">Prop. größtes</span>
-                    </button>
-                    <button id="propMatchMin" class="action-btn align-btn-alt">
-                        <span class="icon-big">↖</span><br>
-                        <span class="btn-label">Prop. kleinstes</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 4: EXTRAS -->
-        <div id="tabExtras" class="tab-content">
-            <div class="controls-section">
-                <h2>Schatten – Standardwerte</h2>
-                <p class="hint">⚠️ Die PowerPoint JS-API unterstützt <strong>keine Schatten-Eigenschaften</strong>. Schatten müssen manuell gesetzt werden.</p>
-                
-                <details style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 12px;">
-                    <summary style="cursor: pointer; font-weight: 600; margin-bottom: 8px;">📖 So geht's:</summary>
-                    <ol style="margin: 8px 0 0 20px; line-height: 1.6;">
-                        <li>Objekt(e) auswählen</li>
-                        <li><strong>Rechtsklick</strong> → <em>Form formatieren</em></li>
-                        <li>Reiter <strong>„Effekte"</strong> (Fünfeck-Symbol)</li>
-                        <li><strong>Schatten</strong> aufklappen</li>
-                        <li>Folgende Werte eintragen:</li>
-                    </ol>
-                </details>
-
-                <div style="background: #f8f9fa; border-radius: 6px; padding: 12px; margin: 10px 0; font-size: 12px; line-height: 1.8;">
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Farbe:</span>
-                        <span>Schwarz</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Transparenz:</span>
-                        <span>75 %</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Größe:</span>
-                        <span>100 %</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Weichzeichnen:</span>
-                        <span>4 pt</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Winkel:</span>
-                        <span>90°</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Abstand:</span>
-                        <span>1 pt</span>
-                    </div>
-                </div>
-
-                <button id="copyShadowText" class="action-btn info-btn full-btn">
-                    <span class="icon-big">📋</span><br>
-                    <span class="btn-label">Werte kopieren</span>
-                </button>
-                <p class="hint" style="margin-top: 8px; font-size: 11px;">Kopiert die Schatten-Werte als Text in die Zwischenablage.</p>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Papierformat</h2>
-                <p class="hint">Setzt die Foliengröße auf das Droege-Format (27,728 × 19,297 cm).</p>
-                <button id="setSlideSize" class="action-btn accent-btn full-btn">
-                    <span class="icon-big">📄</span><br>
-                    <span class="btn-label">Droege-Format setzen</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Info Section -->
-        <div class="info-section">
-            <details>
-                <summary>ℹ️ Hinweise</summary>
-                <ul>
-                    <li>Wähle ein oder mehrere Objekte auf der Folie aus.</li>
-                    <li>Nutze die Buttons, um Größe, Position oder Ausrichtung rasterbasiert anzupassen.</li>
-                    <li><strong>Größe:</strong> Ändert Breite/Höhe um die gewählte Rastereinheit. Bei mehreren Objekten werden Abstände beibehalten.</li>
-                    <li><strong>Raster:</strong> Rundet Position und/oder Größe auf das Raster. Setzt feste Abstände zwischen Objekten.</li>
-                    <li><strong>Angleichen:</strong> Gleicht Objekte an das größte oder kleinste an (min. 2 Objekte).</li>
-                    <li><strong>Extras:</strong> Schatten-Referenzwerte zum manuellen Setzen & Papierformat.</li>
-                </ul>
-            </details>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">Droege Group – Grid Tool</div>
+    <!-- HEADER -->
+    <div class="hdr">
+        <span class="logo">▦</span>
+        <div><strong>Grid Resize <span class="sub">by Droege Group</span></strong></div>
     </div>
 
-    <script src="taskpane.js"></script>
+    <!-- RASTEREINHEIT -->
+    <div class="grid-bar">
+        <label>RE</label>
+        <button class="pre" data-value="0.10">0,10</button>
+        <button class="pre active" data-value="0.21">0,21</button>
+        <button class="pre" data-value="0.50">0,50</button>
+        <button class="pre" data-value="1.00">1,00</button>
+        <input type="number" id="gridUnit" value="0.21" step="0.01" min="0.01">
+        <span class="cm">cm</span>
+    </div>
+
+    <!-- STATUS -->
+    <div id="status" class="sts">Bereit</div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab active" data-tab="pResize">Größe</button>
+        <button class="tab" data-tab="pGrid">Raster</button>
+        <button class="tab" data-tab="pMatch">Angleich</button>
+        <button class="tab" data-tab="pExtras">Extras</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- TAB 1: RESIZE                          -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="pResize" class="pane active">
+
+        <div class="sec">
+            <div class="sec-head">Breite <span class="hint">(Klick +  |  Shift −)</span></div>
+            <div class="g4">
+                <button id="resizeW" class="sq grn" title="Breite ±1 RE">
+                    <svg viewBox="0 0 24 24"><path d="M4 12h16M18 8l4 4-4 4M6 8L2 12l4 4"/></svg>
+                    <span>W</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Höhe <span class="hint">(Klick +  |  Shift −)</span></div>
+            <div class="g4">
+                <button id="resizeH" class="sq grn" title="Höhe ±1 RE">
+                    <svg viewBox="0 0 24 24"><path d="M12 4v16M8 18l4 4 4-4M8 6l4-4 4 4"/></svg>
+                    <span>H</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Beides <span class="hint">(Klick +  |  Shift −)</span></div>
+            <div class="g4">
+                <button id="resizeBoth" class="sq grn" title="W+H ±1 RE">
+                    <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16"/></svg>
+                    <span>W+H</span>
+                </button>
+                <button id="resizeProp" class="sq pur" title="Proportional ±1 RE">
+                    <svg viewBox="0 0 24 24"><path d="M4 4l16 16M15 4h5v5M9 20H4v-5"/></svg>
+                    <span>Prop</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- TAB 2: RASTER / GRID                   -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="pGrid" class="pane">
+
+        <div class="sec">
+            <div class="sec-head">Snap to Grid</div>
+            <div class="g4">
+                <button id="snapPos" class="sq blu" title="Position einrasten">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/></svg>
+                    <span>Pos</span>
+                </button>
+                <button id="snapSize" class="sq blu" title="Größe einrasten">
+                    <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16"/></svg>
+                    <span>Size</span>
+                </button>
+                <button id="snapAll" class="sq blu-d" title="Alles einrasten">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                    <span>Alles</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Abstände <span class="hint">(= 1 RE zwischen Objekten)</span></div>
+            <div class="g4">
+                <button id="spaceH" class="sq amb" title="Horizontaler Abstand">
+                    <svg viewBox="0 0 24 24"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg>
+                    <span>H</span>
+                </button>
+                <button id="spaceV" class="sq amb" title="Vertikaler Abstand">
+                    <svg viewBox="0 0 24 24"><path d="M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4"/></svg>
+                    <span>V</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Info</div>
+            <div class="g4">
+                <button id="showInfo" class="sq drk" title="Objektinfo anzeigen">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    <span>Info</span>
+                </button>
+            </div>
+            <div id="infoBox" class="info-box"></div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Grid-Tabelle erstellen</div>
+            <div class="tbl-form">
+                <div class="tbl-row">
+                    <label>Sp</label><input id="tCols" type="number" value="3" min="1" max="15">
+                    <label>Zl</label><input id="tRows" type="number" value="3" min="1" max="20">
+                    <label>B</label><input id="tCW" type="number" value="20" min="1" title="Zellenbreite in RE">
+                    <label>H</label><input id="tCH" type="number" value="10" min="1" title="Zellenhöhe in RE">
+                </div>
+            </div>
+            <button id="createTable" class="sq-wide teal">
+                <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                Tabelle erstellen
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- TAB 3: ANGLEICHEN                      -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="pMatch" class="pane">
+
+        <div class="sec">
+            <div class="sec-head">Gleiche Breite <span class="hint">(Klick = Max | Shift = Min)</span></div>
+            <div class="g4">
+                <button id="matchW" class="sq blu" title="Breite angleichen">
+                    <svg viewBox="0 0 24 24"><path d="M4 12h16M18 8l4 4-4 4M6 8L2 12l4 4"/></svg>
+                    <span>W</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Gleiche Höhe <span class="hint">(Klick = Max | Shift = Min)</span></div>
+            <div class="g4">
+                <button id="matchH" class="sq blu" title="Höhe angleichen">
+                    <svg viewBox="0 0 24 24"><path d="M12 4v16M8 18l4 4 4-4M8 6l4-4 4 4"/></svg>
+                    <span>H</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Gleiche Größe <span class="hint">(Klick = Max | Shift = Min)</span></div>
+            <div class="g4">
+                <button id="matchBoth" class="sq blu-d" title="Breite + Höhe angleichen">
+                    <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>
+                    <span>W+H</span>
+                </button>
+                <button id="matchProp" class="sq pur" title="Proportional angleichen">
+                    <svg viewBox="0 0 24 24"><path d="M4 4l16 16M15 4h5v5M9 20H4v-5"/></svg>
+                    <span>Prop</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- TAB 4: EXTRAS                          -->
+    <!-- ═══════════════════════════════════════ -->
+    <div id="pExtras" class="pane">
+
+        <div class="sec">
+            <div class="sec-head">Papierformat</div>
+            <button id="setSlide" class="sq-wide teal">
+                <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>
+                27,728 × 19,297 cm
+            </button>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Hilfslinien (Master)</div>
+            <button id="toggleGuides" class="sq-wide teal">
+                <svg viewBox="0 0 24 24"><path d="M3 3v18h18M7 12v5M11 8v9M15 10v7M19 6v11"/></svg>
+                Ein-/Ausblenden
+            </button>
+            <div class="guide-info">
+                <span>Vertikal: <b>8 RE</b>, <b>126 RE</b></span>
+                <span>Horizontal: <b>5</b>, <b>9</b>, <b>15</b>, <b>17</b>, <b>86 RE</b></span>
+            </div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Schatten-Werte</div>
+            <div class="shadow-grid">
+                <span>Farbe</span><span>Schwarz</span>
+                <span>Transparenz</span><span>75 %</span>
+                <span>Größe</span><span>100 %</span>
+                <span>Weichzeichnen</span><span>4 pt</span>
+                <span>Winkel</span><span>90°</span>
+                <span>Abstand</span><span>1 pt</span>
+            </div>
+            <button id="copyShadow" class="sq-wide drk" style="margin-top:4px">
+                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Werte kopieren
+            </button>
+        </div>
+
+    </div>
+
+</div>
+<script src="taskpane.js"></script>
 </body>
 </html>
