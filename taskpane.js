@@ -1,6 +1,15 @@
 /* ═══════════════════════════════════════════════════════════
    DROEGE Grid Resize Tool – Complete JavaScript
-   Compact Edition mit Shift-Click & Multi-Row/Col Spacing
+   Features:
+   - Resize mit Multi-Row/Col Support (groupByPosition)
+   - Spacing mit Multi-Row/Col Support
+   - Snap to Grid
+   - Match Dimensions
+   - Proportional Resize/Match
+   - Grid Table Builder
+   - Slide Setup (27,728 x 19,297 cm)
+   - Guidelines Toggle
+   - Shadow Copy
    ═══════════════════════════════════════════════════════════ */
 
 var CM = 28.3465;
@@ -12,13 +21,15 @@ var GTAG = "DROEGE_GUIDELINE";
 /* ── Office Init ── */
 Office.onReady(function(info) {
     if (info.host === Office.HostType.PowerPoint) {
-        apiOk = !!(
-            Office.context.requirements &&
-            Office.context.requirements.isSetSupported &&
-            Office.context.requirements.isSetSupported("PowerPointApi", "1.5")
-        );
+        if (Office.context.requirements && Office.context.requirements.isSetSupported) {
+            apiOk = Office.context.requirements.isSetSupported("PowerPointApi", "1.5");
+        } else {
+            apiOk = (typeof PowerPoint !== "undefined" && PowerPoint.run && typeof PowerPoint.run === "function");
+        }
         initUI();
-        if (!apiOk) showStatus("PowerPointApi 1.5 nicht verfuegbar", "warning");
+        if (!apiOk) {
+            showStatus("PowerPointApi 1.5 nicht verfuegbar – nur Desktop/Web", "warning");
+        }
     }
 });
 
@@ -91,7 +102,6 @@ function initUI() {
    HELPERS
    ══════════════════════════════════════════════ */
 
-/* Shift-aware binding: normal click = fnNormal, shift+click = fnShift */
 function shiftBind(id, fnNormal, fnShift) {
     document.getElementById(id).addEventListener("click", function(e) {
         e.shiftKey ? fnShift() : fnNormal();
@@ -118,7 +128,6 @@ function c2p(c) { return c * CM; }
 function p2c(p) { return p / CM; }
 function rnd(v) { return Math.round(v / gridUnitCm) * gridUnitCm; }
 
-/* Load selected shapes with minimum count check */
 function withShapes(min, cb) {
     if (!apiOk) {
         showStatus("Nicht unterstuetzt (API 1.5 noetig)", "error");
@@ -140,7 +149,47 @@ function withShapes(min, cb) {
 }
 
 /* ══════════════════════════════════════════════
-   RESIZE (Klick = +1RE, Shift = -1RE)
+   GROUPING: Multi-Row / Multi-Column
+   Shapes werden nach Y (rows) bzw. X (columns)
+   gruppiert. Toleranz = halbe Rastereinheit.
+   ══════════════════════════════════════════════ */
+function groupByPosition(items, axis, tolerance) {
+    var groups = [];
+    var used = {};
+    var sorted = items.slice().sort(function(a, b) {
+        return axis === "y" ? (a.top - b.top) : (a.left - b.left);
+    });
+    for (var i = 0; i < sorted.length; i++) {
+        if (used[i]) continue;
+        var grp = [sorted[i]];
+        used[i] = true;
+        var refPos = axis === "y" ? sorted[i].top : sorted[i].left;
+        for (var j = i + 1; j < sorted.length; j++) {
+            if (used[j]) continue;
+            var pos = axis === "y" ? sorted[j].top : sorted[j].left;
+            if (Math.abs(pos - refPos) <= tolerance) {
+                grp.push(sorted[j]);
+                used[j] = true;
+            }
+        }
+        groups.push(grp);
+    }
+    return groups;
+}
+
+function getTolerance() {
+    var tol = c2p(gridUnitCm) * 0.5;
+    return tol < 5 ? 5 : tol;
+}
+
+/* ══════════════════════════════════════════════
+   RESIZE – Multi-Row/Col Support
+   Klick = +1RE, Shift = -1RE
+   Bei mehreren Shapes:
+   - Width: Gruppiert nach Y (Zeilen), jede Zeile
+     wird horizontal resized + Gaps erhalten
+   - Height: Gruppiert nach X (Spalten), jede Spalte
+     wird vertikal resized + Gaps erhalten
    ══════════════════════════════════════════════ */
 function resize(dim, d) {
     withShapes(1, function(ctx, items) {
@@ -149,7 +198,7 @@ function resize(dim, d) {
             var dp = c2p(Math.abs(d));
             var g = d > 0;
 
-            // Single shape: simple resize
+            // ── Single shape: einfaches Resize ──
             if (items.length === 1) {
                 var s = items[0];
                 if (dim === "width" || dim === "both") {
@@ -161,51 +210,88 @@ function resize(dim, d) {
                     if (nh >= c2p(MIN)) s.height = nh;
                 }
                 return ctx.sync().then(function() {
-                    showStatus((dim === "both" ? "W+H" : dim === "width" ? "W" : "H") + (g ? " +" : " -") + Math.abs(d).toFixed(2) + " cm", "success");
+                    showStatus((dim === "both" ? "W+H" : dim === "width" ? "W" : "H") +
+                        (g ? " +" : " -") + Math.abs(d).toFixed(2) + " cm", "success");
                 });
             }
 
-            // Multiple shapes: resize + preserve gaps
+            // ── Multiple shapes: Multi-Row/Col ──
+            var tol = getTolerance();
+            var rowCount = 0, colCount = 0;
+
             if (dim === "width" || dim === "both") {
-                var hs = items.slice().sort(function(a, b) { return a.left - b.left; });
-                var hg = [];
-                for (var i = 0; i < hs.length - 1; i++) {
-                    hg.push(hs[i + 1].left - (hs[i].left + hs[i].width));
-                }
-                var ok = true;
-                for (var i = 0; i < hs.length; i++) {
-                    if ((g ? hs[i].width + dp : hs[i].width - dp) < c2p(MIN)) { ok = false; break; }
-                }
-                if (ok) {
-                    for (var i = 0; i < hs.length; i++) hs[i].width = g ? hs[i].width + dp : hs[i].width - dp;
-                    for (var i = 1; i < hs.length; i++) hs[i].left = hs[i - 1].left + hs[i - 1].width + hg[i - 1];
-                }
+                // Gruppiere nach Y -> Zeilen, resize jede Zeile horizontal
+                var rows = groupByPosition(items, "y", tol);
+                rowCount = rows.length;
+                rows.forEach(function(row) {
+                    // Sortiere innerhalb der Zeile nach X
+                    row.sort(function(a, b) { return a.left - b.left; });
+                    // Gaps zwischen Shapes in dieser Zeile merken
+                    var gaps = [];
+                    for (var i = 0; i < row.length - 1; i++) {
+                        gaps.push(row[i + 1].left - (row[i].left + row[i].width));
+                    }
+                    // Prüfe ob alle Shapes gross genug bleiben
+                    var ok = true;
+                    for (var i = 0; i < row.length; i++) {
+                        if ((g ? row[i].width + dp : row[i].width - dp) < c2p(MIN)) { ok = false; break; }
+                    }
+                    if (ok) {
+                        // Breite anpassen
+                        for (var i = 0; i < row.length; i++) {
+                            row[i].width = g ? row[i].width + dp : row[i].width - dp;
+                        }
+                        // Positionen nachziehen (Gaps erhalten)
+                        for (var i = 1; i < row.length; i++) {
+                            row[i].left = row[i - 1].left + row[i - 1].width + gaps[i - 1];
+                        }
+                    }
+                });
             }
+
             if (dim === "height" || dim === "both") {
-                var vs = items.slice().sort(function(a, b) { return a.top - b.top; });
-                var vg = [];
-                for (var i = 0; i < vs.length - 1; i++) {
-                    vg.push(vs[i + 1].top - (vs[i].top + vs[i].height));
-                }
-                var ok = true;
-                for (var i = 0; i < vs.length; i++) {
-                    if ((g ? vs[i].height + dp : vs[i].height - dp) < c2p(MIN)) { ok = false; break; }
-                }
-                if (ok) {
-                    for (var i = 0; i < vs.length; i++) vs[i].height = g ? vs[i].height + dp : vs[i].height - dp;
-                    for (var i = 1; i < vs.length; i++) vs[i].top = vs[i - 1].top + vs[i - 1].height + vg[i - 1];
-                }
+                // Gruppiere nach X -> Spalten, resize jede Spalte vertikal
+                var cols = groupByPosition(items, "x", tol);
+                colCount = cols.length;
+                cols.forEach(function(col) {
+                    // Sortiere innerhalb der Spalte nach Y
+                    col.sort(function(a, b) { return a.top - b.top; });
+                    // Gaps zwischen Shapes in dieser Spalte merken
+                    var gaps = [];
+                    for (var i = 0; i < col.length - 1; i++) {
+                        gaps.push(col[i + 1].top - (col[i].top + col[i].height));
+                    }
+                    // Prüfe ob alle Shapes gross genug bleiben
+                    var ok = true;
+                    for (var i = 0; i < col.length; i++) {
+                        if ((g ? col[i].height + dp : col[i].height - dp) < c2p(MIN)) { ok = false; break; }
+                    }
+                    if (ok) {
+                        // Höhe anpassen
+                        for (var i = 0; i < col.length; i++) {
+                            col[i].height = g ? col[i].height + dp : col[i].height - dp;
+                        }
+                        // Positionen nachziehen (Gaps erhalten)
+                        for (var i = 1; i < col.length; i++) {
+                            col[i].top = col[i - 1].top + col[i - 1].height + gaps[i - 1];
+                        }
+                    }
+                });
             }
 
             return ctx.sync().then(function() {
-                showStatus((dim === "both" ? "W+H" : dim === "width" ? "W" : "H") + (g ? " +" : " -") + " Abstaende OK", "success");
+                var info = (dim === "both" ? "W+H" : dim === "width" ? "W" : "H") +
+                    (g ? " +" : " -") + Math.abs(d).toFixed(2) + " cm";
+                if (dim === "width" || dim === "both") info += " (" + rowCount + " Zeile" + (rowCount > 1 ? "n" : "") + ")";
+                if (dim === "height" || dim === "both") info += " (" + colCount + " Spalte" + (colCount > 1 ? "n" : "") + ")";
+                showStatus(info, "success");
             });
         });
     });
 }
 
 /* ══════════════════════════════════════════════
-   PROPORTIONAL RESIZE
+   PROPORTIONAL RESIZE – Multi-Row/Col Support
    ══════════════════════════════════════════════ */
 function propResize(d) {
     withShapes(1, function(ctx, items) {
@@ -214,7 +300,7 @@ function propResize(d) {
             var dp = c2p(Math.abs(d));
             var g = d > 0;
 
-            // Single shape
+            // ── Single shape ──
             if (items.length === 1) {
                 var s = items[0];
                 var r = s.height / s.width;
@@ -228,39 +314,56 @@ function propResize(d) {
                 });
             }
 
-            // Multiple shapes
-            var orig = items.map(function(s) {
-                return { shape: s, left: s.left, top: s.top, width: s.width, height: s.height, ratio: s.height / s.width };
-            });
+            // ── Multiple shapes: Multi-Row/Col ──
+            var tol = getTolerance();
 
+            // Berechne Ratios und prüfe Mindestgröße
+            var data = items.map(function(s) {
+                return { shape: s, ratio: s.height / s.width, left: s.left, top: s.top, width: s.width, height: s.height };
+            });
             var ok = true;
-            orig.forEach(function(o) {
+            data.forEach(function(o) {
                 var nw = g ? o.width + dp : o.width - dp;
                 if (nw < c2p(MIN) || nw * o.ratio < c2p(MIN)) ok = false;
             });
-            if (!ok) { showStatus("Mindestgroesse!", "error"); return ctx.sync(); }
+            if (!ok) { showStatus("Mindestgroesse erreicht!", "error"); return ctx.sync(); }
 
-            var hs = orig.slice().sort(function(a, b) { return a.left - b.left; });
-            var hg = [];
-            for (var i = 0; i < hs.length - 1; i++) hg.push(hs[i + 1].left - (hs[i].left + hs[i].width));
-
-            var vs = orig.slice().sort(function(a, b) { return a.top - b.top; });
-            var vg = [];
-            for (var i = 0; i < vs.length - 1; i++) vg.push(vs[i + 1].top - (vs[i].top + vs[i].height));
-
-            orig.forEach(function(o) {
-                var nw = g ? o.width + dp : o.width - dp;
-                o.nw = nw;
-                o.nh = nw * o.ratio;
-                o.shape.width = nw;
+            // Neue Größen berechnen
+            data.forEach(function(o) {
+                o.nw = g ? o.width + dp : o.width - dp;
+                o.nh = o.nw * o.ratio;
+                o.shape.width = o.nw;
                 o.shape.height = o.nh;
             });
 
-            for (var i = 1; i < hs.length; i++) hs[i].shape.left = hs[i - 1].shape.left + hs[i - 1].nw + hg[i - 1];
-            for (var i = 1; i < vs.length; i++) vs[i].shape.top = vs[i - 1].shape.top + vs[i - 1].nh + vg[i - 1];
+            // Horizontal: Zeilen gruppieren, Gaps erhalten
+            var rows = groupByPosition(data, "y", tol);
+            rows.forEach(function(row) {
+                row.sort(function(a, b) { return a.left - b.left; });
+                var gaps = [];
+                for (var i = 0; i < row.length - 1; i++) {
+                    gaps.push(row[i + 1].left - (row[i].left + row[i].width));
+                }
+                for (var i = 1; i < row.length; i++) {
+                    row[i].shape.left = row[i - 1].shape.left + row[i - 1].nw + gaps[i - 1];
+                }
+            });
+
+            // Vertikal: Spalten gruppieren, Gaps erhalten
+            var cols = groupByPosition(data, "x", tol);
+            cols.forEach(function(col) {
+                col.sort(function(a, b) { return a.top - b.top; });
+                var gaps = [];
+                for (var i = 0; i < col.length - 1; i++) {
+                    gaps.push(col[i + 1].top - (col[i].top + col[i].height));
+                }
+                for (var i = 1; i < col.length; i++) {
+                    col[i].shape.top = col[i - 1].shape.top + col[i - 1].nh + gaps[i - 1];
+                }
+            });
 
             return ctx.sync().then(function() {
-                showStatus("Prop " + (g ? "+" : "-") + " Abstaende OK", "success");
+                showStatus("Prop " + (g ? "+" : "-") + " (" + rows.length + " Zeilen, " + cols.length + " Spalten)", "success");
             });
         });
     });
@@ -294,48 +397,15 @@ function snap(mode) {
 
 /* ══════════════════════════════════════════════
    SPACING – Multi-Row / Multi-Column
-   Groups shapes by Y (rows) or X (columns),
-   then applies fixed spacing within each group.
    ══════════════════════════════════════════════ */
-
-/* Group shapes into rows or columns by position similarity */
-function groupByPosition(items, axis, tolerance) {
-    var groups = [];
-    var used = {};
-    var sorted = items.slice().sort(function(a, b) {
-        return axis === "y" ? (a.top - b.top) : (a.left - b.left);
-    });
-    for (var i = 0; i < sorted.length; i++) {
-        if (used[i]) continue;
-        var grp = [sorted[i]];
-        used[i] = true;
-        var refPos = axis === "y" ? sorted[i].top : sorted[i].left;
-        for (var j = i + 1; j < sorted.length; j++) {
-            if (used[j]) continue;
-            var pos = axis === "y" ? sorted[j].top : sorted[j].left;
-            if (Math.abs(pos - refPos) <= tolerance) {
-                grp.push(sorted[j]);
-                used[j] = true;
-            }
-        }
-        groups.push(grp);
-    }
-    return groups;
-}
-
 function spacing(dir) {
     withShapes(2, function(ctx, items) {
         items.forEach(function(s) { s.load(["left", "top", "width", "height"]); });
         return ctx.sync().then(function() {
             var sp = c2p(gridUnitCm);
-
-            /* Tolerance: half a grid unit in points, minimum 5pt.
-               Shapes within this Y/X range are considered the same row/column */
-            var tol = c2p(gridUnitCm) * 0.5;
-            if (tol < 5) tol = 5;
+            var tol = getTolerance();
 
             if (dir === "horizontal") {
-                /* Group by Y position (= rows), then space each row horizontally */
                 var rows = groupByPosition(items, "y", tol);
                 rows.forEach(function(row) {
                     if (row.length < 2) return;
@@ -344,12 +414,10 @@ function spacing(dir) {
                         row[i].left = row[i - 1].left + row[i - 1].width + sp;
                     }
                 });
-                var rc = rows.length;
                 return ctx.sync().then(function() {
-                    showStatus("H-Abstand " + gridUnitCm.toFixed(2) + " cm (" + rc + " Zeile" + (rc > 1 ? "n" : "") + ")", "success");
+                    showStatus("H-Abstand " + gridUnitCm.toFixed(2) + " cm (" + rows.length + " Zeile" + (rows.length > 1 ? "n" : "") + ")", "success");
                 });
             } else {
-                /* Group by X position (= columns), then space each column vertically */
                 var cols = groupByPosition(items, "x", tol);
                 cols.forEach(function(col) {
                     if (col.length < 2) return;
@@ -358,9 +426,8 @@ function spacing(dir) {
                         col[i].top = col[i - 1].top + col[i - 1].height + sp;
                     }
                 });
-                var cc = cols.length;
                 return ctx.sync().then(function() {
-                    showStatus("V-Abstand " + gridUnitCm.toFixed(2) + " cm (" + cc + " Spalte" + (cc > 1 ? "n" : "") + ")", "success");
+                    showStatus("V-Abstand " + gridUnitCm.toFixed(2) + " cm (" + cols.length + " Spalte" + (cols.length > 1 ? "n" : "") + ")", "success");
                 });
             }
         });
@@ -380,8 +447,8 @@ function shapeInfo() {
                 if (items.length > 1) {
                     html += '<div style="font-weight:700;margin-top:' + (idx > 0 ? '4' : '0') + 'px;color:#e94560">' + (s.name || 'Obj ' + (idx + 1)) + '</div>';
                 }
-                html += '<div class="info-item"><span class="info-label">W:</span><span class="info-value">' + p2c(s.width).toFixed(2) + ' cm</span></div>';
-                html += '<div class="info-item"><span class="info-label">H:</span><span class="info-value">' + p2c(s.height).toFixed(2) + ' cm</span></div>';
+                html += '<div class="info-item"><span class="info-label">W:</span><span class="info-value">' + p2c(s.width).toFixed(2) + ' cm (' + (p2c(s.width) / gridUnitCm).toFixed(1) + ' RE)</span></div>';
+                html += '<div class="info-item"><span class="info-label">H:</span><span class="info-value">' + p2c(s.height).toFixed(2) + ' cm (' + (p2c(s.height) / gridUnitCm).toFixed(1) + ' RE)</span></div>';
                 html += '<div class="info-item"><span class="info-label">X:</span><span class="info-value">' + p2c(s.left).toFixed(2) + ' cm</span></div>';
                 html += '<div class="info-item"><span class="info-label">Y:</span><span class="info-value">' + p2c(s.top).toFixed(2) + ' cm</span></div>';
             });
@@ -496,10 +563,12 @@ function buildTable(ctx, slide, cols, rows, cw, ch) {
 }
 
 /* ══════════════════════════════════════════════
-   SETUP: Slide Size
+   SETUP: Slide Size – 27,728 x 19,297 cm
+   27.728 cm × 28.3465 pt/cm = 785.98 pt ≈ 786 pt
+   19.297 cm × 28.3465 pt/cm = 547.00 pt
    ══════════════════════════════════════════════ */
 function setSlideSize() {
-    var tw = 785.5;
+    var tw = 786;
     var th = 547;
     PowerPoint.run(function(ctx) {
         var ps = ctx.presentation.pageSetup;
@@ -511,7 +580,7 @@ function setSlideSize() {
             ps.slideHeight = th;
             return ctx.sync();
         }).then(function() {
-            showStatus("Format: 27,711 x 19,297 cm", "success");
+            showStatus("Format: 27,728 x 19,297 cm", "success");
         });
     }).catch(function(e) {
         showStatus("Fehler: " + e.message, "error");
@@ -616,7 +685,7 @@ function copyShadow() {
     var t = "Schatten:\nFarbe: Schwarz\nTransparenz: 75%\nGroesse: 100%\nWeichzeichnen: 4pt\nWinkel: 90\nAbstand: 1pt";
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(t).then(function() {
-            showStatus("Kopiert", "success");
+            showStatus("Schatten-Werte kopiert", "success");
         }).catch(function() {
             showStatus("Kopieren fehlgeschlagen", "error");
         });
