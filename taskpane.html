@@ -10,13 +10,11 @@
 <body>
 <div class="app">
 
-    <!-- HEADER -->
     <div class="hdr">
         <span class="logo">⬡</span>
-        <div><strong>Grid Resize</strong><br><span class="sub">12.02.2026 09:48:05</span></div>
+        <div><strong>Grid Resize</strong><br><span class="sub">12.02.2026 10:18:08</span></div>
     </div>
 
-    <!-- RASTEREINHEIT -->
     <div class="grid-bar">
         <label>RE</label>
         <button class="pre active" data-value="0.21">0,21</button>
@@ -27,127 +25,133 @@
         <span class="cm">cm</span>
     </div>
 
-    <!-- STATUS (dauerhaft sichtbar) -->
-    <div id="status" class="sts">Bereit – Objekt auswählen</div>
+    <div id="status" class="sts">Bereit · Klick = Aktion · Shift+Klick = Umkehren</div>
 
-    <!-- TABS -->
     <nav class="tabs">
         <button class="tab active" data-tab="t1">Resize</button>
         <button class="tab" data-tab="t2">Grid</button>
         <button class="tab" data-tab="t3">Setup</button>
     </nav>
 
-    <!-- ============ TAB 1: RESIZE + MATCH ============ -->
     <div id="t1" class="pane active">
-
-        <!-- RESIZE: Width / Height / Both -->
         <div class="sec">
-            <div class="sec-head">Größe ändern</div>
-            <div class="resize-grid">
-                <span class="rlbl">W</span>
-                <button id="shrinkWidth" class="ib red" title="Breite verkleinern">−</button>
-                <button id="growWidth" class="ib grn" title="Breite vergrößern">+</button>
-
-                <span class="rlbl">H</span>
-                <button id="shrinkHeight" class="ib red" title="Höhe verkleinern">−</button>
-                <button id="growHeight" class="ib grn" title="Höhe vergrößern">+</button>
-
-                <span class="rlbl">W+H</span>
-                <button id="shrinkBoth" class="ib red" title="Beides verkleinern">−</button>
-                <button id="growBoth" class="ib grn" title="Beides vergrößern">+</button>
-
-                <span class="rlbl">⤢</span>
-                <button id="propShrink" class="ib red" title="Proportional verkleinern">−</button>
-                <button id="propGrow" class="ib grn" title="Proportional vergrößern">+</button>
+            <div class="sec-head">Groesse <span class="hint">Klick +1RE · Shift -1RE</span></div>
+            <div class="g4">
+                <button class="sq grn" id="resizeW" title="Breite: Klick +1RE / Shift -1RE">
+                    <svg viewBox="0 0 24 24"><path d="M4 12h16M4 12l3-3m-3 3l3 3m13-3l-3-3m3 3l-3 3"/></svg>
+                    <span>W</span>
+                </button>
+                <button class="sq grn" id="resizeH" title="Hoehe: Klick +1RE / Shift -1RE">
+                    <svg viewBox="0 0 24 24"><path d="M12 4v16M12 4l-3 3m3-3l3 3m-3 13l-3-3m3 3l3-3"/></svg>
+                    <span>H</span>
+                </button>
+                <button class="sq grn" id="resizeBoth" title="W+H: Klick +1RE / Shift -1RE">
+                    <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16M4 12l2-2m-2 2l2 2m12-2l-2-2m2 2l-2 2M12 4l-2 2m2-2l2 2m-2 12l-2-2m2 2l2-2"/></svg>
+                    <span>W+H</span>
+                </button>
+                <button class="sq grn" id="resizeProp" title="Proportional: Klick +1RE / Shift -1RE">
+                    <svg viewBox="0 0 24 24"><path d="M4 20L20 4M4 20l4-1m-4 1l1-4m15-11l-4 1m4-1l-1 4"/></svg>
+                    <span>Prop</span>
+                </button>
             </div>
         </div>
 
-        <!-- MATCH -->
         <div class="sec">
-            <div class="sec-head">Angleichen <span class="hint-inline">(min. 2 Objekte)</span></div>
-            <div class="match-grid">
-                <span class="rlbl"></span>
-                <span class="col-h">▲ Max</span>
-                <span class="col-h">▼ Min</span>
-
-                <span class="rlbl">W</span>
-                <button id="matchWidthMax" class="ib pur" title="Breite → größtes">⬛</button>
-                <button id="matchWidthMin" class="ib ora" title="Breite → kleinstes">⬜</button>
-
-                <span class="rlbl">H</span>
-                <button id="matchHeightMax" class="ib pur" title="Höhe → größtes">⬛</button>
-                <button id="matchHeightMin" class="ib ora" title="Höhe → kleinstes">⬜</button>
-
-                <span class="rlbl">W+H</span>
-                <button id="matchBothMax" class="ib pur" title="Beides → größtes">⬛</button>
-                <button id="matchBothMin" class="ib ora" title="Beides → kleinstes">⬜</button>
-
-                <span class="rlbl">⤢</span>
-                <button id="propMatchMax" class="ib pur" title="Proportional → größtes">⬛</button>
-                <button id="propMatchMin" class="ib ora" title="Proportional → kleinstes">⬜</button>
+            <div class="sec-head">Angleichen <span class="hint">Klick Max · Shift Min · min 2 Obj.</span></div>
+            <div class="g4">
+                <button class="sq pur" id="matchW" title="Breite angleichen: Klick Max / Shift Min">
+                    <svg viewBox="0 0 24 24"><path d="M8 4v16M16 4v16M4 12h16"/></svg>
+                    <span>W</span>
+                </button>
+                <button class="sq pur" id="matchH" title="Hoehe angleichen: Klick Max / Shift Min">
+                    <svg viewBox="0 0 24 24"><path d="M4 8h16M4 16h16M12 4v16"/></svg>
+                    <span>H</span>
+                </button>
+                <button class="sq pur" id="matchBoth" title="Beides angleichen: Klick Max / Shift Min">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM8 3v18M16 3v18M3 8h18M3 16h18"/></svg>
+                    <span>W+H</span>
+                </button>
+                <button class="sq pur" id="matchProp" title="Proportional angleichen: Klick Max / Shift Min">
+                    <svg viewBox="0 0 24 24"><path d="M4 20L20 4M8 4v16M16 4v16"/></svg>
+                    <span>Prop</span>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ============ TAB 2: GRID + SPACING + TABLE ============ -->
     <div id="t2" class="pane">
-
-        <!-- SNAP -->
         <div class="sec">
-            <div class="sec-head">Am Raster einrasten</div>
-            <div class="snap-row">
-                <button id="snapPosition" class="cb blu" title="Position einrasten">📍 Pos</button>
-                <button id="snapSize" class="cb blu" title="Größe einrasten">↔ Size</button>
-                <button id="snapBoth" class="cb blu-d" title="Beides einrasten">▦ Alles</button>
+            <div class="sec-head">Einrasten</div>
+            <div class="g4">
+                <button class="sq blu" id="snapPos" title="Position einrasten">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+                    <span>Pos</span>
+                </button>
+                <button class="sq blu" id="snapSize" title="Groesse einrasten">
+                    <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 4l5 5m11-5l-5 5M4 20l5-5m11 5l-5-5"/></svg>
+                    <span>Size</span>
+                </button>
+                <button class="sq blu-d" id="snapAll" title="Beides einrasten">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                    <span>Alles</span>
+                </button>
+                <button class="sq drk" id="showInfo" title="Objektinfo anzeigen">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8h0m0 3v5"/></svg>
+                    <span>Info</span>
+                </button>
             </div>
         </div>
 
-        <!-- SPACING -->
         <div class="sec">
-            <div class="sec-head">Abstände <span class="hint-inline">(= 1 RE)</span></div>
-            <div class="snap-row">
-                <button id="setSpacingH" class="cb amb" title="Horizontale Abstände setzen">↔ H</button>
-                <button id="setSpacingV" class="cb amb" title="Vertikale Abstände setzen">↕ V</button>
-                <button id="showInfo" class="cb drk" title="Objektinfo anzeigen">ℹ Info</button>
+            <div class="sec-head">Abstaende <span class="hint">= 1 RE</span></div>
+            <div class="g2">
+                <button class="sq amb" id="spaceH" title="Horizontale Abstaende = 1 RE">
+                    <svg viewBox="0 0 24 24"><path d="M7 4v16M17 4v16M7 12h10M7 12l2-2m-2 2l2 2m8-2l-2-2m2 2l-2 2"/></svg>
+                    <span>H-Dist</span>
+                </button>
+                <button class="sq amb" id="spaceV" title="Vertikale Abstaende = 1 RE">
+                    <svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M12 7v10M12 7l-2 2m2-2l2 2m-2 8l-2-2m2 2l2-2"/></svg>
+                    <span>V-Dist</span>
+                </button>
             </div>
-            <div id="infoDisplay" class="info-box"></div>
         </div>
 
-        <!-- TABLE -->
+        <div id="infoDisplay" class="info-box"></div>
+
         <div class="sec">
             <div class="sec-head">Raster-Tabelle</div>
             <div class="tbl-form">
                 <div class="tbl-row">
-                    <label>Sp</label><input type="number" id="tableColumns" value="5" min="1" max="15" title="Spalten (max 15)">
-                    <label>Ze</label><input type="number" id="tableRows" value="5" min="1" max="20" title="Zeilen (max 20)">
+                    <label>Sp</label><input type="number" id="tCols" value="5" min="1" max="15">
+                    <label>Ze</label><input type="number" id="tRows" value="5" min="1" max="20">
+                    <label>B</label><input type="number" id="tCW" value="5" min="1" step="1">
+                    <label>H</label><input type="number" id="tCH" value="5" min="1" step="1">
                 </div>
-                <div class="tbl-row">
-                    <label>B</label><input type="number" id="tableCellWidth" value="5" min="1" step="1" title="Zellbreite (RE)">
-                    <label>H</label><input type="number" id="tableCellHeight" value="5" min="1" step="1" title="Zellhöhe (RE)">
-                </div>
-                <button id="createTable" class="cb teal full" title="Tabelle auf aktueller Folie erstellen">⊞ Tabelle erstellen</button>
+                <button class="sq-wide teal" id="createTable" title="Tabelle erstellen">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                    <span>Tabelle erstellen</span>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ============ TAB 3: SETUP ============ -->
     <div id="t3" class="pane">
-
         <div class="sec">
-            <div class="sec-head">Papierformat</div>
-            <button id="setSlideSize" class="cb amb full" title="27,711 × 19,297 cm">📄 Droege-Format setzen <span class="dim">27,711 × 19,297 cm</span></button>
-        </div>
-
-        <div class="sec">
-            <div class="sec-head">Hilfslinien (Master)</div>
-            <button id="toggleGuidelines" class="cb blu full" title="Rote Hilfslinien in allen Folienmastern ein-/ausblenden">📐 Hilfslinien ein/aus</button>
-            <details class="det">
-                <summary>Positionen</summary>
-                <ul>
-                    <li><b>V:</b> 8, 126 RE</li>
-                    <li><b>H:</b> 5, 9, 15, 17, 86 RE</li>
-                </ul>
-            </details>
+            <div class="sec-head">Einrichtung</div>
+            <div class="g3">
+                <button class="sq amb" id="setSlide" title="27,711 x 19,297 cm">
+                    <svg viewBox="0 0 24 24"><path d="M4 4h16v12H4zM8 20h8M12 16v4"/></svg>
+                    <span>Format</span>
+                </button>
+                <button class="sq blu" id="toggleGuides" title="Hilfslinien ein/aus">
+                    <svg viewBox="0 0 24 24"><path d="M4 4v16M20 4v16M4 12h16M12 4v16"/></svg>
+                    <span>Guides</span>
+                </button>
+                <button class="sq drk" id="copyShadow" title="Schatten-Werte kopieren">
+                    <svg viewBox="0 0 24 24"><path d="M8 4h12v12M4 8h12v12H4z"/></svg>
+                    <span>Shadow</span>
+                </button>
+            </div>
         </div>
 
         <div class="sec">
@@ -155,12 +159,27 @@
             <div class="shadow-grid">
                 <span>Farbe</span><span>Schwarz</span>
                 <span>Transp.</span><span>75 %</span>
-                <span>Größe</span><span>100 %</span>
+                <span>Groesse</span><span>100 %</span>
                 <span>Weichz.</span><span>4 pt</span>
-                <span>Winkel</span><span>90°</span>
+                <span>Winkel</span><span>90 Grad</span>
                 <span>Abstand</span><span>1 pt</span>
             </div>
-            <button id="copyShadowText" class="cb drk full" title="Schatten-Werte in Zwischenablage kopieren">📋 Werte kopieren</button>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Hilfslinien</div>
+            <div class="guide-info">
+                <span><b>V:</b> 8, 126 RE</span>
+                <span><b>H:</b> 5, 9, 15, 17, 86 RE</span>
+            </div>
+        </div>
+
+        <div class="sec">
+            <div class="sec-head">Papierformat</div>
+            <div class="guide-info">
+                <span><b>B:</b> 27,711 cm (785,5 pt)</span>
+                <span><b>H:</b> 19,297 cm (547 pt)</span>
+            </div>
         </div>
     </div>
 

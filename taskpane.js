@@ -1,11 +1,11 @@
-/* ===== Grid Resize Tool – Compact Edition ===== */
+/* ===== Grid Resize Tool – Ultra Compact + Shift-Click ===== */
 var CM=28.3465, MIN=0.1, gridUnitCm=0.21, apiOk=false, GTAG="DROEGE_GUIDELINE";
 
 Office.onReady(function(info){
     if(info.host===Office.HostType.PowerPoint){
         apiOk=!!(Office.context.requirements&&Office.context.requirements.isSetSupported&&Office.context.requirements.isSetSupported("PowerPointApi","1.5"));
         initUI();
-        if(!apiOk) showStatus("⚠ PowerPointApi 1.5 nicht verfügbar – Shape-Funktionen nur auf Desktop/Web","warning");
+        if(!apiOk) showStatus("PowerPointApi 1.5 nicht verfuegbar","warning");
     }
 });
 
@@ -28,61 +28,54 @@ function initUI(){
         });
     });
 
-    // Tab 1: Resize
-    bind("shrinkWidth",function(){resize("width",-gridUnitCm)});
-    bind("growWidth",function(){resize("width",gridUnitCm)});
-    bind("shrinkHeight",function(){resize("height",-gridUnitCm)});
-    bind("growHeight",function(){resize("height",gridUnitCm)});
-    bind("shrinkBoth",function(){resize("both",-gridUnitCm)});
-    bind("growBoth",function(){resize("both",gridUnitCm)});
-    bind("propShrink",function(){propResize(-gridUnitCm)});
-    bind("propGrow",function(){propResize(gridUnitCm)});
+    // Tab 1: Resize (Klick = grow, Shift+Klick = shrink)
+    shiftBind("resizeW",    function(){resize("width",gridUnitCm)},    function(){resize("width",-gridUnitCm)});
+    shiftBind("resizeH",    function(){resize("height",gridUnitCm)},   function(){resize("height",-gridUnitCm)});
+    shiftBind("resizeBoth", function(){resize("both",gridUnitCm)},     function(){resize("both",-gridUnitCm)});
+    shiftBind("resizeProp", function(){propResize(gridUnitCm)},        function(){propResize(-gridUnitCm)});
 
-    // Tab 1: Match
-    bind("matchWidthMax",function(){match("width","max")});
-    bind("matchWidthMin",function(){match("width","min")});
-    bind("matchHeightMax",function(){match("height","max")});
-    bind("matchHeightMin",function(){match("height","min")});
-    bind("matchBothMax",function(){match("both","max")});
-    bind("matchBothMin",function(){match("both","min")});
-    bind("propMatchMax",function(){propMatch("max")});
-    bind("propMatchMin",function(){propMatch("min")});
+    // Tab 1: Match (Klick = max, Shift+Klick = min)
+    shiftBind("matchW",    function(){match("width","max")},   function(){match("width","min")});
+    shiftBind("matchH",    function(){match("height","max")},  function(){match("height","min")});
+    shiftBind("matchBoth", function(){match("both","max")},    function(){match("both","min")});
+    shiftBind("matchProp", function(){propMatch("max")},       function(){propMatch("min")});
 
     // Tab 2: Grid
-    bind("snapPosition",function(){snap("position")});
-    bind("snapSize",function(){snap("size")});
-    bind("snapBoth",function(){snap("both")});
-    bind("setSpacingH",function(){spacing("horizontal")});
-    bind("setSpacingV",function(){spacing("vertical")});
-    bind("showInfo",function(){shapeInfo()});
+    bind("snapPos",    function(){snap("position")});
+    bind("snapSize",   function(){snap("size")});
+    bind("snapAll",    function(){snap("both")});
+    bind("spaceH",     function(){spacing("horizontal")});
+    bind("spaceV",     function(){spacing("vertical")});
+    bind("showInfo",   function(){shapeInfo()});
     bind("createTable",function(){createGridTable()});
 
     // Tab 3: Setup
-    bind("setSlideSize",function(){setSlideSize()});
-    bind("toggleGuidelines",function(){toggleGuides()});
-    bind("copyShadowText",function(){copyShadow()});
+    bind("setSlide",      function(){setSlideSize()});
+    bind("toggleGuides",  function(){toggleGuides()});
+    bind("copyShadow",    function(){copyShadow()});
 }
 
+/* Shift-aware binding: normal click → fnNormal, shift+click → fnShift */
+function shiftBind(id,fnNormal,fnShift){
+    document.getElementById(id).addEventListener("click",function(e){
+        e.shiftKey ? fnShift() : fnNormal();
+    });
+}
 function bind(id,fn){document.getElementById(id).addEventListener("click",fn)}
 function upPre(v){document.querySelectorAll(".pre").forEach(function(b){b.classList.toggle("active",Math.abs(parseFloat(b.dataset.value)-v)<.001)})}
 
-/* STATUS: dauerhaft sichtbar – Text bleibt stehen bis zur nächsten Aktion */
-function showStatus(m,t){
-    var e=document.getElementById("status");
-    e.textContent=m;
-    e.className="sts "+(t||"info");
-}
+function showStatus(m,t){var e=document.getElementById("status");e.textContent=m;e.className="sts "+(t||"info")}
 
 function c2p(c){return c*CM}
 function p2c(p){return p/CM}
 function rnd(v){return Math.round(v/gridUnitCm)*gridUnitCm}
 
 function withShapes(min,cb){
-    if(!apiOk){showStatus("Nicht unterstützt (PowerPointApi 1.5 erforderlich)","error");return}
+    if(!apiOk){showStatus("Nicht unterstuetzt (API 1.5 noetig)","error");return}
     PowerPoint.run(function(ctx){
         var sh=ctx.presentation.getSelectedShapes();sh.load("items");
         return ctx.sync().then(function(){
-            if(sh.items.length<min){showStatus(min<=1?"Bitte Objekt(e) auswählen!":"Min. "+min+" Objekte auswählen!","error");return}
+            if(sh.items.length<min){showStatus(min<=1?"Bitte Objekt(e) auswaehlen!":"Min. "+min+" Objekte auswaehlen!","error");return}
             return cb(ctx,sh.items);
         });
     }).catch(function(e){showStatus("Fehler: "+e.message,"error")});
@@ -98,7 +91,7 @@ function resize(dim,d){
                 var s=items[0];
                 if(dim==="width"||dim==="both"){var nw=g?s.width+dp:s.width-dp;if(nw>=c2p(MIN))s.width=nw}
                 if(dim==="height"||dim==="both"){var nh=g?s.height+dp:s.height-dp;if(nh>=c2p(MIN))s.height=nh}
-                return ctx.sync().then(function(){showStatus((dim==="both"?"W+H":dim==="width"?"W":"H")+(g?" +":"")+Math.abs(d).toFixed(2)+" cm","success")});
+                return ctx.sync().then(function(){showStatus((dim==="both"?"W+H":dim==="width"?"W":"H")+(g?" +":"  -")+Math.abs(d).toFixed(2)+" cm","success")});
             }
             if(dim==="width"||dim==="both"){
                 var hs=items.slice().sort(function(a,b){return a.left-b.left}),hg=[];
@@ -112,7 +105,7 @@ function resize(dim,d){
                 var ok=true;for(var i=0;i<vs.length;i++)if((g?vs[i].height+dp:vs[i].height-dp)<c2p(MIN)){ok=false;break}
                 if(ok){for(var i=0;i<vs.length;i++)vs[i].height=g?vs[i].height+dp:vs[i].height-dp;for(var i=1;i<vs.length;i++)vs[i].top=vs[i-1].top+vs[i-1].height+vg[i-1]}
             }
-            return ctx.sync().then(function(){showStatus((dim==="both"?"W+H":dim==="width"?"W":"H")+(g?" +":" −")+" Abstände OK","success")});
+            return ctx.sync().then(function(){showStatus((dim==="both"?"W+H":dim==="width"?"W":"H")+(g?" +":" -")+" Abstaende OK","success")});
         });
     });
 }
@@ -125,11 +118,11 @@ function propResize(d){
             if(items.length===1){
                 var s=items[0],r=s.height/s.width,nw=g?s.width+dp:s.width-dp;
                 if(nw>=c2p(MIN)){var nh=nw*r;if(nh>=c2p(MIN)){s.width=nw;s.height=nh}}
-                return ctx.sync().then(function(){showStatus("Proportional "+(g?"+":"−")+Math.abs(d).toFixed(2)+" cm","success")});
+                return ctx.sync().then(function(){showStatus("Prop "+(g?"+":"-")+Math.abs(d).toFixed(2)+" cm","success")});
             }
             var orig=items.map(function(s){return{shape:s,left:s.left,top:s.top,width:s.width,height:s.height,ratio:s.height/s.width}});
             var ok=true;orig.forEach(function(o){var nw=g?o.width+dp:o.width-dp;if(nw<c2p(MIN)||nw*o.ratio<c2p(MIN))ok=false});
-            if(!ok){showStatus("Mindestgröße!","error");return ctx.sync()}
+            if(!ok){showStatus("Mindestgroesse!","error");return ctx.sync()}
             var hs=orig.slice().sort(function(a,b){return a.left-b.left}),hg=[];
             for(var i=0;i<hs.length-1;i++)hg.push(hs[i+1].left-(hs[i].left+hs[i].width));
             var vs=orig.slice().sort(function(a,b){return a.top-b.top}),vg=[];
@@ -137,7 +130,7 @@ function propResize(d){
             orig.forEach(function(o){var nw=g?o.width+dp:o.width-dp;o.nw=nw;o.nh=nw*o.ratio;o.shape.width=nw;o.shape.height=o.nh});
             for(var i=1;i<hs.length;i++)hs[i].shape.left=hs[i-1].shape.left+hs[i-1].nw+hg[i-1];
             for(var i=1;i<vs.length;i++)vs[i].shape.top=vs[i-1].shape.top+vs[i-1].nh+vg[i-1];
-            return ctx.sync().then(function(){showStatus("Proportional "+(g?"+":"−")+" Abstände OK","success")});
+            return ctx.sync().then(function(){showStatus("Prop "+(g?"+":"-")+" Abstaende OK","success")});
         });
     });
 }
@@ -151,7 +144,7 @@ function snap(mode){
                 if(mode==="position"||mode==="both"){s.left=c2p(rnd(p2c(s.left)));s.top=c2p(rnd(p2c(s.top)))}
                 if(mode==="size"||mode==="both"){var nw=rnd(p2c(s.width)),nh=rnd(p2c(s.height));if(nw>=MIN)s.width=c2p(nw);if(nh>=MIN)s.height=c2p(nh)}
             });
-            return ctx.sync().then(function(){showStatus("Am Raster eingerastet ✓","success")});
+            return ctx.sync().then(function(){showStatus("Eingerastet ("+mode+")","success")});
         });
     });
 }
@@ -168,7 +161,7 @@ function spacing(dir){
                 var sorted=items.slice().sort(function(a,b){return a.top-b.top});
                 for(var i=1;i<sorted.length;i++)sorted[i].top=sorted[i-1].top+sorted[i-1].height+sp;
             }
-            return ctx.sync().then(function(){showStatus((dir==="horizontal"?"H":"V")+"-Abstand "+gridUnitCm.toFixed(2)+" cm ✓","success")});
+            return ctx.sync().then(function(){showStatus((dir==="horizontal"?"H":"V")+"-Abstand "+gridUnitCm.toFixed(2)+" cm","success")});
         });
     });
 }
@@ -179,14 +172,14 @@ function shapeInfo(){
         return ctx.sync().then(function(){
             var el=document.getElementById("infoDisplay"),html="";
             items.forEach(function(s,idx){
-                if(items.length>1)html+='<div style="font-weight:700;margin-top:'+(idx>0?'6':'0')+'px;color:#e94560">'+(s.name||'Obj '+(idx+1))+'</div>';
+                if(items.length>1)html+='<div style="font-weight:700;margin-top:'+(idx>0?'4':'0')+'px;color:#e94560">'+(s.name||'Obj '+(idx+1))+'</div>';
                 html+='<div class="info-item"><span class="info-label">W:</span><span class="info-value">'+p2c(s.width).toFixed(2)+' cm</span></div>';
                 html+='<div class="info-item"><span class="info-label">H:</span><span class="info-value">'+p2c(s.height).toFixed(2)+' cm</span></div>';
                 html+='<div class="info-item"><span class="info-label">X:</span><span class="info-value">'+p2c(s.left).toFixed(2)+' cm</span></div>';
                 html+='<div class="info-item"><span class="info-label">Y:</span><span class="info-value">'+p2c(s.top).toFixed(2)+' cm</span></div>';
             });
             el.innerHTML=html;el.classList.add("visible");
-            showStatus("Info geladen ✓","info");
+            showStatus("Info geladen","info");
         });
     });
 }
@@ -200,7 +193,7 @@ function match(dim,mode){
             var tw=mode==="max"?Math.max.apply(null,ws):Math.min.apply(null,ws);
             var th=mode==="max"?Math.max.apply(null,hs):Math.min.apply(null,hs);
             items.forEach(function(s){if(dim==="width"||dim==="both")s.width=tw;if(dim==="height"||dim==="both")s.height=th});
-            return ctx.sync().then(function(){showStatus("Angeglichen → "+mode+" ✓","success")});
+            return ctx.sync().then(function(){showStatus("Angeglichen -> "+mode,"success")});
         });
     });
 }
@@ -212,19 +205,19 @@ function propMatch(mode){
             var ws=items.map(function(s){return s.width});
             var tw=mode==="max"?Math.max.apply(null,ws):Math.min.apply(null,ws);
             items.forEach(function(s){var r=s.height/s.width;s.width=tw;s.height=tw*r});
-            return ctx.sync().then(function(){showStatus("Prop. angeglichen → "+mode+" ✓","success")});
+            return ctx.sync().then(function(){showStatus("Prop angeglichen -> "+mode,"success")});
         });
     });
 }
 
 // ===== TABLE =====
 function createGridTable(){
-    var cols=parseInt(document.getElementById("tableColumns").value);
-    var rows=parseInt(document.getElementById("tableRows").value);
-    var cw=parseFloat(document.getElementById("tableCellWidth").value);
-    var ch=parseFloat(document.getElementById("tableCellHeight").value);
-    if(isNaN(cols)||isNaN(rows)||cols<1||rows<1){showStatus("Ungültige Spalten/Zeilen!","error");return}
-    if(isNaN(cw)||isNaN(ch)||cw<1||ch<1){showStatus("Ungültige Zellgröße!","error");return}
+    var cols=parseInt(document.getElementById("tCols").value);
+    var rows=parseInt(document.getElementById("tRows").value);
+    var cw=parseFloat(document.getElementById("tCW").value);
+    var ch=parseFloat(document.getElementById("tCH").value);
+    if(isNaN(cols)||isNaN(rows)||cols<1||rows<1){showStatus("Ungueltige Spalten/Zeilen!","error");return}
+    if(isNaN(cw)||isNaN(ch)||cw<1||ch<1){showStatus("Ungueltige Zellgroesse!","error");return}
     if(cols>15){showStatus("Max 15 Spalten!","warning");return}
     if(rows>20){showStatus("Max 20 Zeilen!","warning");return}
 
@@ -251,9 +244,7 @@ function buildTable(ctx,slide,cols,rows,cw,ch){
         s.fill.setSolidColor("FFFFFF");s.lineFormat.color="808080";s.lineFormat.weight=0.3;
         s.name="TC_"+r+"_"+c;
     }
-    return ctx.sync().then(function(){
-        showStatus(cols+"×"+rows+" Tabelle erstellt ✓","success");
-    });
+    return ctx.sync().then(function(){showStatus(cols+"x"+rows+" Tabelle erstellt","success")});
 }
 
 // ===== SETUP =====
@@ -262,7 +253,7 @@ function setSlideSize(){
     PowerPoint.run(function(ctx){
         var ps=ctx.presentation.pageSetup;ps.load(["slideWidth","slideHeight"]);
         return ctx.sync().then(function(){ps.slideWidth=tw;return ctx.sync()}).then(function(){ps.slideHeight=th;return ctx.sync()}).then(function(){
-            showStatus("Format: 27,711 × 19,297 cm ✓","success");
+            showStatus("Format: 27,711 x 19,297 cm","success");
         });
     }).catch(function(e){showStatus("Fehler: "+e.message,"error")});
 }
@@ -301,7 +292,7 @@ function addGuides(ctx,masters){
                 s.name=GTAG+"_"+g.t+"_"+g.u;s.fill.setSolidColor("FF0000");s.lineFormat.visible=false;
             });
         });
-        return ctx.sync().then(function(){showStatus("Hilfslinien eingeblendet ✓","success")});
+        return ctx.sync().then(function(){showStatus("Hilfslinien eingeblendet","success")});
     });
 }
 
@@ -316,11 +307,11 @@ function removeGuides(ctx,masters){
             });
         }));
     });
-    return Promise.all(proms).then(function(){return ctx.sync().then(function(){showStatus("Hilfslinien entfernt ✓","success")})});
+    return Promise.all(proms).then(function(){return ctx.sync().then(function(){showStatus("Hilfslinien entfernt","success")})});
 }
 
 function copyShadow(){
-    var t="Schatten-Standardwerte:\nFarbe: Schwarz\nTransparenz: 75 %\nGröße: 100 %\nWeichzeichnen: 4 pt\nWinkel: 90°\nAbstand: 1 pt";
-    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){showStatus("Kopiert ✓","success")}).catch(function(){showStatus("Kopieren fehlgeschlagen","error")});
-    else showStatus("Zwischenablage nicht verfügbar","error");
+    var t="Schatten:\nFarbe: Schwarz\nTransparenz: 75%\nGroesse: 100%\nWeichzeichnen: 4pt\nWinkel: 90\nAbstand: 1pt";
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){showStatus("Kopiert","success")}).catch(function(){showStatus("Kopieren fehlgeschlagen","error")});
+    else showStatus("Zwischenablage nicht verfuegbar","error");
 }
