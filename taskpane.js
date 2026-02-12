@@ -1,562 +1,319 @@
-/* ===== Grid Resize Tool - JavaScript ===== */
-/* iPad-safe: Runtime-Check für PowerPointApi 1.5 (getSelectedShapes) */
-var CM_TO_POINTS = 28.3465;
-var MIN_SIZE_CM = 0.1;
-var gridUnitCm = 0.21;
-var apiAvailable = false;
-var GUIDELINE_TAG = "DROEGE_GUIDELINE";
+/* ===== Grid Resize Tool – Compact Edition ===== */
+var CM=28.3465, MIN=0.1, gridUnitCm=0.21, apiOk=false, GTAG="DROEGE_GUIDELINE";
 
-Office.onReady(function (info) {
-    if (info.host === Office.HostType.PowerPoint) {
-        if (Office.context.requirements && Office.context.requirements.isSetSupported) {
-            apiAvailable = Office.context.requirements.isSetSupported("PowerPointApi", "1.5");
-        } else {
-            apiAvailable = (typeof PowerPoint !== "undefined" &&
-                            PowerPoint.run &&
-                            typeof PowerPoint.run === "function");
-        }
-
+Office.onReady(function(info){
+    if(info.host===Office.HostType.PowerPoint){
+        apiOk=!!(Office.context.requirements&&Office.context.requirements.isSetSupported&&Office.context.requirements.isSetSupported("PowerPointApi","1.5"));
         initUI();
-
-        if (!apiAvailable) {
-            showPlatformWarning();
-        }
+        if(!apiOk) showStatus("⚠ PowerPointApi 1.5 nicht verfügbar – Shape-Funktionen nur auf Desktop/Web","warning");
     }
 });
 
-function showPlatformWarning() {
-    var banner = document.createElement("div");
-    banner.id = "platformBanner";
-    banner.style.cssText = "background:#FFF3CD;border:1px solid #FFECB5;border-radius:8px;padding:12px 16px;margin:8px 0 12px;color:#664D03;font-size:13px;line-height:1.5;";
-    banner.innerHTML = '<strong style="display:block;margin-bottom:4px;">⚠️ Eingeschränkte Plattform</strong>' +
-        'Dieses Gerät unterstützt <strong>PowerPointApi 1.5</strong> nicht. ' +
-        'Die Shape-Manipulation (Größe ändern, Raster, Angleichen) ist leider <strong>nur auf Desktop & Web</strong> verfügbar.<br><br>' +
-        '<span style="font-size:12px;opacity:0.8;">iPad / iOS unterstützt derzeit max. PowerPointApi 1.1, ' +
-        'welche keine getSelectedShapes() API bietet.</span>';
-    var container = document.querySelector(".main-content") || document.querySelector(".container") || document.body;
-    if (container.firstChild) {
-        container.insertBefore(banner, container.firstChild);
-    } else {
-        container.appendChild(banner);
-    }
-}
+function initUI(){
+    // Grid Unit
+    var gi=document.getElementById("gridUnit");
+    gi.addEventListener("change",function(){var v=parseFloat(this.value);if(!isNaN(v)&&v>0){gridUnitCm=v;upPre(v);showStatus("RE: "+v.toFixed(2)+" cm","info")}});
+    document.querySelectorAll(".pre").forEach(function(b){
+        b.addEventListener("click",function(){var v=parseFloat(this.dataset.value);gridUnitCm=v;gi.value=v;upPre(v);showStatus("RE: "+v.toFixed(2)+" cm","info")});
+    });
 
-function initUI() {
-    var gridInput = document.getElementById("gridUnit");
-    gridInput.addEventListener("change", function () {
-        var val = parseFloat(this.value);
-        if (!isNaN(val) && val > 0) { gridUnitCm = val; updatePresetButtons(val); showStatus("Rastereinheit: " + val.toFixed(2) + " cm", "info"); }
-    });
-    document.querySelectorAll(".preset-btn").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-            var val = parseFloat(this.getAttribute("data-value"));
-            gridUnitCm = val; gridInput.value = val; updatePresetButtons(val);
-            showStatus("Rastereinheit: " + val.toFixed(2) + " cm", "info");
-        });
-    });
-    document.querySelectorAll(".tab-btn").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-            var tabId = this.getAttribute("data-tab");
-            document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.remove("active"); });
-            document.querySelectorAll(".tab-content").forEach(function (t) { t.classList.remove("active"); });
+    // Tabs
+    document.querySelectorAll(".tab").forEach(function(b){
+        b.addEventListener("click",function(){
+            var id=this.dataset.tab;
+            document.querySelectorAll(".tab").forEach(function(t){t.classList.remove("active")});
+            document.querySelectorAll(".pane").forEach(function(p){p.classList.remove("active")});
             this.classList.add("active");
-            document.getElementById(tabId).classList.add("active");
+            document.getElementById(id).classList.add("active");
         });
     });
-    
-    // TAB 1: SIZE
-    document.getElementById("shrinkWidth").addEventListener("click", function () { resizeShapes("width", -gridUnitCm); });
-    document.getElementById("growWidth").addEventListener("click", function () { resizeShapes("width", gridUnitCm); });
-    document.getElementById("shrinkHeight").addEventListener("click", function () { resizeShapes("height", -gridUnitCm); });
-    document.getElementById("growHeight").addEventListener("click", function () { resizeShapes("height", gridUnitCm); });
-    document.getElementById("shrinkBoth").addEventListener("click", function () { resizeShapes("both", -gridUnitCm); });
-    document.getElementById("growBoth").addEventListener("click", function () { resizeShapes("both", gridUnitCm); });
-    document.getElementById("propShrink").addEventListener("click", function () { proportionalResize(-gridUnitCm); });
-    document.getElementById("propGrow").addEventListener("click", function () { proportionalResize(gridUnitCm); });
-    
-    // TAB 2: SNAP
-    document.getElementById("snapPosition").addEventListener("click", function () { snapToGrid("position"); });
-    document.getElementById("snapSize").addEventListener("click", function () { snapToGrid("size"); });
-    document.getElementById("snapBoth").addEventListener("click", function () { snapToGrid("both"); });
-    document.getElementById("showInfo").addEventListener("click", function () { showShapeInfo(); });
-    document.getElementById("setSpacingH").addEventListener("click", function () { setFixedSpacing("horizontal"); });
-    document.getElementById("setSpacingV").addEventListener("click", function () { setFixedSpacing("vertical"); });
-    
-    // TAB 3: MATCH
-    document.getElementById("matchWidthMax").addEventListener("click", function () { matchDimension("width", "max"); });
-    document.getElementById("matchWidthMin").addEventListener("click", function () { matchDimension("width", "min"); });
-    document.getElementById("matchHeightMax").addEventListener("click", function () { matchDimension("height", "max"); });
-    document.getElementById("matchHeightMin").addEventListener("click", function () { matchDimension("height", "min"); });
-    document.getElementById("matchBothMax").addEventListener("click", function () { matchDimension("both", "max"); });
-    document.getElementById("matchBothMin").addEventListener("click", function () { matchDimension("both", "min"); });
-    document.getElementById("propMatchMax").addEventListener("click", function () { proportionalMatch("max"); });
-    document.getElementById("propMatchMin").addEventListener("click", function () { proportionalMatch("min"); });
-    
-    // TAB 4: TABLE
-    document.getElementById("createTable").addEventListener("click", function () { createGridTable(); });
-    
-    // TAB 5: EXTRAS
-    document.getElementById("setSlideSize").addEventListener("click", function () { setDroegeSlideSize(); });
-    document.getElementById("toggleGuidelines").addEventListener("click", function () { toggleGuidelines(); });
 
-    var copyBtn = document.getElementById("copyShadowText");
-    if (copyBtn) {
-        copyBtn.addEventListener("click", function () {
-            var text = "Schatten-Standardwerte:\n" +
-                "Farbe: Schwarz\n" +
-                "Transparenz: 75 %\n" +
-                "Größe: 100 %\n" +
-                "Weichzeichnen: 4 pt\n" +
-                "Winkel: 90°\n" +
-                "Abstand: 1 pt";
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(function () {
-                    showStatus("Schatten-Werte kopiert ✓", "success");
-                }).catch(function () {
-                    showStatus("Kopieren fehlgeschlagen", "error");
-                });
-            } else {
-                showStatus("Zwischenablage nicht verfügbar", "error");
-            }
-        });
-    }
+    // Tab 1: Resize
+    bind("shrinkWidth",function(){resize("width",-gridUnitCm)});
+    bind("growWidth",function(){resize("width",gridUnitCm)});
+    bind("shrinkHeight",function(){resize("height",-gridUnitCm)});
+    bind("growHeight",function(){resize("height",gridUnitCm)});
+    bind("shrinkBoth",function(){resize("both",-gridUnitCm)});
+    bind("growBoth",function(){resize("both",gridUnitCm)});
+    bind("propShrink",function(){propResize(-gridUnitCm)});
+    bind("propGrow",function(){propResize(gridUnitCm)});
+
+    // Tab 1: Match
+    bind("matchWidthMax",function(){match("width","max")});
+    bind("matchWidthMin",function(){match("width","min")});
+    bind("matchHeightMax",function(){match("height","max")});
+    bind("matchHeightMin",function(){match("height","min")});
+    bind("matchBothMax",function(){match("both","max")});
+    bind("matchBothMin",function(){match("both","min")});
+    bind("propMatchMax",function(){propMatch("max")});
+    bind("propMatchMin",function(){propMatch("min")});
+
+    // Tab 2: Grid
+    bind("snapPosition",function(){snap("position")});
+    bind("snapSize",function(){snap("size")});
+    bind("snapBoth",function(){snap("both")});
+    bind("setSpacingH",function(){spacing("horizontal")});
+    bind("setSpacingV",function(){spacing("vertical")});
+    bind("showInfo",function(){shapeInfo()});
+    bind("createTable",function(){createGridTable()});
+
+    // Tab 3: Setup
+    bind("setSlideSize",function(){setSlideSize()});
+    bind("toggleGuidelines",function(){toggleGuides()});
+    bind("copyShadowText",function(){copyShadow()});
 }
 
-function updatePresetButtons(val) {
-    document.querySelectorAll(".preset-btn").forEach(function (btn) {
-        btn.classList.toggle("active", Math.abs(parseFloat(btn.getAttribute("data-value")) - val) < 0.001);
+function bind(id,fn){document.getElementById(id).addEventListener("click",fn)}
+function upPre(v){document.querySelectorAll(".pre").forEach(function(b){b.classList.toggle("active",Math.abs(parseFloat(b.dataset.value)-v)<.001)})}
+function showStatus(m,t){var e=document.getElementById("status");e.textContent=m;e.className="sts visible "+(t||"info");setTimeout(function(){e.classList.remove("visible")},3000)}
+function c2p(c){return c*CM}
+function p2c(p){return p/CM}
+function rnd(v){return Math.round(v/gridUnitCm)*gridUnitCm}
+
+function withShapes(min,cb){
+    if(!apiOk){showStatus("Nicht unterstützt (PowerPointApi 1.5 erforderlich)","error");return}
+    PowerPoint.run(function(ctx){
+        var sh=ctx.presentation.getSelectedShapes();sh.load("items");
+        return ctx.sync().then(function(){
+            if(sh.items.length<min){showStatus(min<=1?"Bitte Objekt(e) auswählen!":"Min. "+min+" Objekte auswählen!","error");return}
+            return cb(ctx,sh.items);
+        });
+    }).catch(function(e){showStatus("Fehler: "+e.message,"error")});
+}
+
+// ===== RESIZE =====
+function resize(dim,d){
+    withShapes(1,function(ctx,items){
+        items.forEach(function(s){s.load(["left","top","width","height"])});
+        return ctx.sync().then(function(){
+            var dp=c2p(Math.abs(d)),g=d>0;
+            if(items.length===1){
+                var s=items[0];
+                if(dim==="width"||dim==="both"){var nw=g?s.width+dp:s.width-dp;if(nw>=c2p(MIN))s.width=nw}
+                if(dim==="height"||dim==="both"){var nh=g?s.height+dp:s.height-dp;if(nh>=c2p(MIN))s.height=nh}
+                return ctx.sync().then(function(){showStatus((dim==="both"?"W+H":dim==="width"?"W":"H")+(g?" +":"")+Math.abs(d).toFixed(2)+" cm","success")});
+            }
+            if(dim==="width"||dim==="both"){
+                var hs=items.slice().sort(function(a,b){return a.left-b.left}),hg=[];
+                for(var i=0;i<hs.length-1;i++)hg.push(hs[i+1].left-(hs[i].left+hs[i].width));
+                var ok=true;for(var i=0;i<hs.length;i++)if((g?hs[i].width+dp:hs[i].width-dp)<c2p(MIN)){ok=false;break}
+                if(ok){for(var i=0;i<hs.length;i++)hs[i].width=g?hs[i].width+dp:hs[i].width-dp;for(var i=1;i<hs.length;i++)hs[i].left=hs[i-1].left+hs[i-1].width+hg[i-1]}
+            }
+            if(dim==="height"||dim==="both"){
+                var vs=items.slice().sort(function(a,b){return a.top-b.top}),vg=[];
+                for(var i=0;i<vs.length-1;i++)vg.push(vs[i+1].top-(vs[i].top+vs[i].height));
+                var ok=true;for(var i=0;i<vs.length;i++)if((g?vs[i].height+dp:vs[i].height-dp)<c2p(MIN)){ok=false;break}
+                if(ok){for(var i=0;i<vs.length;i++)vs[i].height=g?vs[i].height+dp:vs[i].height-dp;for(var i=1;i<vs.length;i++)vs[i].top=vs[i-1].top+vs[i-1].height+vg[i-1]}
+            }
+            return ctx.sync().then(function(){showStatus((dim==="both"?"W+H":dim==="width"?"W":"H")+(g?" +":" −")+" Abstände OK","success")});
+        });
     });
 }
 
-function showStatus(message, type) {
-    var el = document.getElementById("status");
-    el.textContent = message;
-    el.className = "status visible " + (type || "info");
-    setTimeout(function () { el.classList.remove("visible"); }, 3000);
-}
-
-function cmToPoints(cm) { return cm * CM_TO_POINTS; }
-function pointsToCm(pts) { return pts / CM_TO_POINTS; }
-function roundToGrid(valueCm) { return Math.round(valueCm / gridUnitCm) * gridUnitCm; }
-
-function withSelectedShapes(minCount, callback) {
-    if (!apiAvailable) {
-        showStatus("Diese Funktion wird auf diesem Gerät leider nicht unterstützt (PowerPointApi 1.5 erforderlich).", "error");
-        return;
-    }
-    PowerPoint.run(function (context) {
-        var shapes = context.presentation.getSelectedShapes();
-        shapes.load("items");
-        return context.sync().then(function () {
-            if (shapes.items.length < minCount) {
-                showStatus(minCount <= 1 ? "Bitte Objekt(e) auswählen!" : "Bitte mindestens " + minCount + " Objekte auswählen!", "error");
-                return;
+function propResize(d){
+    withShapes(1,function(ctx,items){
+        items.forEach(function(s){s.load(["left","top","width","height"])});
+        return ctx.sync().then(function(){
+            var dp=c2p(Math.abs(d)),g=d>0;
+            if(items.length===1){
+                var s=items[0],r=s.height/s.width,nw=g?s.width+dp:s.width-dp;
+                if(nw>=c2p(MIN)){var nh=nw*r;if(nh>=c2p(MIN)){s.width=nw;s.height=nh}}
+                return ctx.sync().then(function(){showStatus("Proportional "+(g?"+":"−")+Math.abs(d).toFixed(2)+" cm","success")});
             }
-            return callback(context, shapes.items);
+            var orig=items.map(function(s){return{shape:s,left:s.left,top:s.top,width:s.width,height:s.height,ratio:s.height/s.width}});
+            var ok=true;orig.forEach(function(o){var nw=g?o.width+dp:o.width-dp;if(nw<c2p(MIN)||nw*o.ratio<c2p(MIN))ok=false});
+            if(!ok){showStatus("Mindestgröße!","error");return ctx.sync()}
+            var hs=orig.slice().sort(function(a,b){return a.left-b.left}),hg=[];
+            for(var i=0;i<hs.length-1;i++)hg.push(hs[i+1].left-(hs[i].left+hs[i].width));
+            var vs=orig.slice().sort(function(a,b){return a.top-b.top}),vg=[];
+            for(var i=0;i<vs.length-1;i++)vg.push(vs[i+1].top-(vs[i].top+vs[i].height));
+            orig.forEach(function(o){var nw=g?o.width+dp:o.width-dp;o.nw=nw;o.nh=nw*o.ratio;o.shape.width=nw;o.shape.height=o.nh});
+            for(var i=1;i<hs.length;i++)hs[i].shape.left=hs[i-1].shape.left+hs[i-1].nw+hg[i-1];
+            for(var i=1;i<vs.length;i++)vs[i].shape.top=vs[i-1].shape.top+vs[i-1].nh+vg[i-1];
+            return ctx.sync().then(function(){showStatus("Proportional "+(g?"+":"−")+" Abstände OK","success")});
         });
-    }).catch(function (error) { showStatus("Fehler: " + error.message, "error"); });
+    });
 }
 
-// ===== TAB 1: RESIZE =====
-function resizeShapes(dimension, deltaCm) {
-    withSelectedShapes(1, function (context, items) {
-        items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
-        return context.sync().then(function () {
-            var dp = cmToPoints(Math.abs(deltaCm));
-            var grow = deltaCm > 0;
+// ===== SNAP =====
+function snap(mode){
+    withShapes(1,function(ctx,items){
+        items.forEach(function(s){s.load(["left","top","width","height"])});
+        return ctx.sync().then(function(){
+            items.forEach(function(s){
+                if(mode==="position"||mode==="both"){s.left=c2p(rnd(p2c(s.left)));s.top=c2p(rnd(p2c(s.top)))}
+                if(mode==="size"||mode==="both"){var nw=rnd(p2c(s.width)),nh=rnd(p2c(s.height));if(nw>=MIN)s.width=c2p(nw);if(nh>=MIN)s.height=c2p(nh)}
+            });
+            return ctx.sync().then(function(){showStatus("Am Raster eingerastet ✓","success")});
+        });
+    });
+}
 
-            if (items.length === 1) {
-                var s = items[0];
-                if (dimension === "width" || dimension === "both") { var nw = grow ? s.width + dp : s.width - dp; if (nw >= cmToPoints(MIN_SIZE_CM)) s.width = nw; }
-                if (dimension === "height" || dimension === "both") { var nh = grow ? s.height + dp : s.height - dp; if (nh >= cmToPoints(MIN_SIZE_CM)) s.height = nh; }
-                return context.sync().then(function () {
-                    showStatus((dimension === "both" ? "Breite & Höhe" : dimension === "width" ? "Breite" : "Höhe") + (grow ? " vergrößert" : " verkleinert") + " (" + Math.abs(deltaCm).toFixed(2) + " cm)", "success");
-                });
+function spacing(dir){
+    withShapes(2,function(ctx,items){
+        items.forEach(function(s){s.load(["left","top","width","height"])});
+        return ctx.sync().then(function(){
+            var sp=c2p(gridUnitCm);
+            if(dir==="horizontal"){
+                var sorted=items.slice().sort(function(a,b){return a.left-b.left});
+                for(var i=1;i<sorted.length;i++)sorted[i].left=sorted[i-1].left+sorted[i-1].width+sp;
+            }else{
+                var sorted=items.slice().sort(function(a,b){return a.top-b.top});
+                for(var i=1;i<sorted.length;i++)sorted[i].top=sorted[i-1].top+sorted[i-1].height+sp;
             }
+            return ctx.sync().then(function(){showStatus((dir==="horizontal"?"H":"V")+"-Abstand "+gridUnitCm.toFixed(2)+" cm ✓","success")});
+        });
+    });
+}
 
-            if (dimension === "width" || dimension === "both") {
-                var hs = items.slice().sort(function (a, b) { return a.left - b.left; });
-                var hg = [];
-                for (var i = 0; i < hs.length - 1; i++) hg.push(hs[i + 1].left - (hs[i].left + hs[i].width));
-                var hOk = true;
-                for (var i = 0; i < hs.length; i++) { if ((grow ? hs[i].width + dp : hs[i].width - dp) < cmToPoints(MIN_SIZE_CM)) { hOk = false; break; } }
-                if (hOk) {
-                    for (var i = 0; i < hs.length; i++) hs[i].width = grow ? hs[i].width + dp : hs[i].width - dp;
-                    for (var i = 1; i < hs.length; i++) hs[i].left = hs[i - 1].left + hs[i - 1].width + hg[i - 1];
-                }
-            }
-            if (dimension === "height" || dimension === "both") {
-                var vs = items.slice().sort(function (a, b) { return a.top - b.top; });
-                var vg = [];
-                for (var i = 0; i < vs.length - 1; i++) vg.push(vs[i + 1].top - (vs[i].top + vs[i].height));
-                var vOk = true;
-                for (var i = 0; i < vs.length; i++) { if ((grow ? vs[i].height + dp : vs[i].height - dp) < cmToPoints(MIN_SIZE_CM)) { vOk = false; break; } }
-                if (vOk) {
-                    for (var i = 0; i < vs.length; i++) vs[i].height = grow ? vs[i].height + dp : vs[i].height - dp;
-                    for (var i = 1; i < vs.length; i++) vs[i].top = vs[i - 1].top + vs[i - 1].height + vg[i - 1];
-                }
-            }
-            return context.sync().then(function () {
-                showStatus((dimension === "both" ? "Breite & Höhe" : dimension === "width" ? "Breite" : "Höhe") + (grow ? " vergrößert" : " verkleinert") + " – Abstände beibehalten", "success");
+function shapeInfo(){
+    withShapes(1,function(ctx,items){
+        items.forEach(function(s){s.load(["name","left","top","width","height"])});
+        return ctx.sync().then(function(){
+            var el=document.getElementById("infoDisplay"),html="";
+            items.forEach(function(s,idx){
+                if(items.length>1)html+='<div style="font-weight:700;margin-top:'+(idx>0?'6':'0')+'px;color:#e94560">'+(s.name||'Obj '+(idx+1))+'</div>';
+                html+='<div class="info-item"><span class="info-label">W:</span><span class="info-value">'+p2c(s.width).toFixed(2)+' cm</span></div>';
+                html+='<div class="info-item"><span class="info-label">H:</span><span class="info-value">'+p2c(s.height).toFixed(2)+' cm</span></div>';
+                html+='<div class="info-item"><span class="info-label">X:</span><span class="info-value">'+p2c(s.left).toFixed(2)+' cm</span></div>';
+                html+='<div class="info-item"><span class="info-label">Y:</span><span class="info-value">'+p2c(s.top).toFixed(2)+' cm</span></div>';
+            });
+            el.innerHTML=html;el.classList.add("visible");
+            showStatus("Info geladen ✓","info");
+        });
+    });
+}
+
+// ===== MATCH =====
+function match(dim,mode){
+    withShapes(2,function(ctx,items){
+        items.forEach(function(s){s.load(["width","height"])});
+        return ctx.sync().then(function(){
+            var ws=items.map(function(s){return s.width}),hs=items.map(function(s){return s.height});
+            var tw=mode==="max"?Math.max.apply(null,ws):Math.min.apply(null,ws);
+            var th=mode==="max"?Math.max.apply(null,hs):Math.min.apply(null,hs);
+            items.forEach(function(s){if(dim==="width"||dim==="both")s.width=tw;if(dim==="height"||dim==="both")s.height=th});
+            return ctx.sync().then(function(){showStatus("Angeglichen → "+mode+" ✓","success")});
+        });
+    });
+}
+
+function propMatch(mode){
+    withShapes(2,function(ctx,items){
+        items.forEach(function(s){s.load(["width","height"])});
+        return ctx.sync().then(function(){
+            var ws=items.map(function(s){return s.width});
+            var tw=mode==="max"?Math.max.apply(null,ws):Math.min.apply(null,ws);
+            items.forEach(function(s){var r=s.height/s.width;s.width=tw;s.height=tw*r});
+            return ctx.sync().then(function(){showStatus("Prop. angeglichen → "+mode+" ✓","success")});
+        });
+    });
+}
+
+// ===== TABLE =====
+function createGridTable(){
+    var cols=parseInt(document.getElementById("tableColumns").value);
+    var rows=parseInt(document.getElementById("tableRows").value);
+    var cw=parseFloat(document.getElementById("tableCellWidth").value);
+    var ch=parseFloat(document.getElementById("tableCellHeight").value);
+    if(isNaN(cols)||isNaN(rows)||cols<1||rows<1){showStatus("Ungültige Spalten/Zeilen!","error");return}
+    if(isNaN(cw)||isNaN(ch)||cw<1||ch<1){showStatus("Ungültige Zellgröße!","error");return}
+    if(cols>15){showStatus("Max 15 Spalten!","warning");return}
+    if(rows>20){showStatus("Max 20 Zeilen!","warning");return}
+
+    PowerPoint.run(function(ctx){
+        var sel=ctx.presentation.getSelectedSlides();sel.load("items");
+        return ctx.sync().then(function(){
+            if(sel.items.length>0)return buildTable(ctx,sel.items[0],cols,rows,cw,ch);
+            var slides=ctx.presentation.slides;slides.load("items");
+            return ctx.sync().then(function(){
+                if(!slides.items.length){showStatus("Keine Folie!","error");return ctx.sync()}
+                return buildTable(ctx,slides.items[0],cols,rows,cw,ch);
             });
         });
-    });
+    }).catch(function(e){showStatus("Fehler: "+e.message,"error")});
 }
 
-function proportionalResize(deltaCm) {
-    withSelectedShapes(1, function (context, items) {
-        items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
-        return context.sync().then(function () {
-            var dp = cmToPoints(Math.abs(deltaCm));
-            var grow = deltaCm > 0;
-
-            if (items.length === 1) {
-                var s = items[0], r = s.height / s.width;
-                var nw = grow ? s.width + dp : s.width - dp;
-                if (nw >= cmToPoints(MIN_SIZE_CM)) { var nh = nw * r; if (nh >= cmToPoints(MIN_SIZE_CM)) { s.width = nw; s.height = nh; } }
-                return context.sync().then(function () { showStatus("Proportional " + (grow ? "vergrößert" : "verkleinert") + " (" + Math.abs(deltaCm).toFixed(2) + " cm)", "success"); });
-            }
-
-            var orig = items.map(function (s) { return { shape: s, left: s.left, top: s.top, width: s.width, height: s.height, ratio: s.height / s.width }; });
-            var ok = true;
-            orig.forEach(function (o) { var nw = grow ? o.width + dp : o.width - dp; if (nw < cmToPoints(MIN_SIZE_CM) || nw * o.ratio < cmToPoints(MIN_SIZE_CM)) ok = false; });
-            if (!ok) { showStatus("Mindestgröße erreicht!", "error"); return context.sync(); }
-
-            var hs = orig.slice().sort(function (a, b) { return a.left - b.left; });
-            var hg = []; for (var i = 0; i < hs.length - 1; i++) hg.push(hs[i + 1].left - (hs[i].left + hs[i].width));
-            var vs = orig.slice().sort(function (a, b) { return a.top - b.top; });
-            var vg = []; for (var i = 0; i < vs.length - 1; i++) vg.push(vs[i + 1].top - (vs[i].top + vs[i].height));
-
-            orig.forEach(function (o) { var nw = grow ? o.width + dp : o.width - dp; o.nw = nw; o.nh = nw * o.ratio; o.shape.width = nw; o.shape.height = o.nh; });
-            for (var i = 1; i < hs.length; i++) hs[i].shape.left = hs[i - 1].shape.left + hs[i - 1].nw + hg[i - 1];
-            for (var i = 1; i < vs.length; i++) vs[i].shape.top = vs[i - 1].shape.top + vs[i - 1].nh + vg[i - 1];
-
-            return context.sync().then(function () { showStatus("Proportional " + (grow ? "vergrößert" : "verkleinert") + " – Abstände beibehalten", "success"); });
-        });
-    });
-}
-
-// ===== TAB 2: SNAP TO GRID =====
-function snapToGrid(mode) {
-    withSelectedShapes(1, function (context, items) {
-        items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
-        return context.sync().then(function () {
-            items.forEach(function (s) {
-                if (mode === "position" || mode === "both") { s.left = cmToPoints(roundToGrid(pointsToCm(s.left))); s.top = cmToPoints(roundToGrid(pointsToCm(s.top))); }
-                if (mode === "size" || mode === "both") { var nw = roundToGrid(pointsToCm(s.width)); var nh = roundToGrid(pointsToCm(s.height)); if (nw >= MIN_SIZE_CM) s.width = cmToPoints(nw); if (nh >= MIN_SIZE_CM) s.height = cmToPoints(nh); }
-            });
-            return context.sync().then(function () { showStatus((mode === "both" ? "Position & Größe" : mode === "position" ? "Position" : "Größe") + " am Raster ausgerichtet ✓", "success"); });
-        });
-    });
-}
-
-function setFixedSpacing(direction) {
-    withSelectedShapes(2, function (context, items) {
-        items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
-        return context.sync().then(function () {
-            var spacing = cmToPoints(gridUnitCm);
-            
-            if (direction === "horizontal") {
-                var sorted = items.slice().sort(function (a, b) { return a.left - b.left; });
-                for (var i = 1; i < sorted.length; i++) {
-                    sorted[i].left = sorted[i - 1].left + sorted[i - 1].width + spacing;
-                }
-                return context.sync().then(function () {
-                    showStatus("Horizontale Abstände auf " + gridUnitCm.toFixed(2) + " cm gesetzt ✓", "success");
-                });
-            } else if (direction === "vertical") {
-                var sorted = items.slice().sort(function (a, b) { return a.top - b.top; });
-                for (var i = 1; i < sorted.length; i++) {
-                    sorted[i].top = sorted[i - 1].top + sorted[i - 1].height + spacing;
-                }
-                return context.sync().then(function () {
-                    showStatus("Vertikale Abstände auf " + gridUnitCm.toFixed(2) + " cm gesetzt ✓", "success");
-                });
-            }
-        });
-    });
-}
-
-function showShapeInfo() {
-    withSelectedShapes(1, function (context, items) {
-        items.forEach(function (s) { s.load(["name", "left", "top", "width", "height"]); });
-        return context.sync().then(function () {
-            var el = document.getElementById("infoDisplay"), html = "";
-            items.forEach(function (s, idx) {
-                if (items.length > 1) html += '<div style="font-weight:700;margin-top:' + (idx > 0 ? '8' : '0') + 'px;margin-bottom:4px;">' + (s.name || 'Objekt ' + (idx + 1)) + '</div>';
-                html += '<div class="info-item"><span class="info-label">Breite:</span><span class="info-value">' + pointsToCm(s.width).toFixed(2) + ' cm</span></div>';
-                html += '<div class="info-item"><span class="info-label">Höhe:</span><span class="info-value">' + pointsToCm(s.height).toFixed(2) + ' cm</span></div>';
-                html += '<div class="info-item"><span class="info-label">Links:</span><span class="info-value">' + pointsToCm(s.left).toFixed(2) + ' cm</span></div>';
-                html += '<div class="info-item"><span class="info-label">Oben:</span><span class="info-value">' + pointsToCm(s.top).toFixed(2) + ' cm</span></div>';
-            });
-            el.innerHTML = html; el.classList.add("visible");
-            showStatus("Objektinfo geladen ✓", "info");
-        });
-    });
-}
-
-// ===== TAB 3: MATCH DIMENSIONS =====
-function matchDimension(dimension, mode) {
-    withSelectedShapes(2, function (context, items) {
-        items.forEach(function (s) { s.load(["width", "height"]); });
-        return context.sync().then(function () {
-            var ws = items.map(function (s) { return s.width; }), hs = items.map(function (s) { return s.height; });
-            var tw = mode === "max" ? Math.max.apply(null, ws) : Math.min.apply(null, ws);
-            var th = mode === "max" ? Math.max.apply(null, hs) : Math.min.apply(null, hs);
-            items.forEach(function (s) { if (dimension === "width" || dimension === "both") s.width = tw; if (dimension === "height" || dimension === "both") s.height = th; });
-            return context.sync().then(function () { showStatus("Alle auf " + (dimension === "both" ? "Größe" : dimension === "width" ? "Breite" : "Höhe") + " des " + (mode === "max" ? "größten" : "kleinsten") + " Objekts ✓", "success"); });
-        });
-    });
-}
-
-function proportionalMatch(mode) {
-    withSelectedShapes(2, function (context, items) {
-        items.forEach(function (s) { s.load(["width", "height"]); });
-        return context.sync().then(function () {
-            var ws = items.map(function (s) { return s.width; });
-            var tw = mode === "max" ? Math.max.apply(null, ws) : Math.min.apply(null, ws);
-            items.forEach(function (s) { var r = s.height / s.width; s.width = tw; s.height = tw * r; });
-            return context.sync().then(function () { showStatus("Proportional auf Breite des " + (mode === "max" ? "größten" : "kleinsten") + " Objekts ✓", "success"); });
-        });
-    });
-}
-
-// ===== TAB 4: CREATE GRID TABLE =====
-function createGridTable() {
-    var cols = parseInt(document.getElementById("tableColumns").value);
-    var rows = parseInt(document.getElementById("tableRows").value);
-    var cellWidthUnits = parseFloat(document.getElementById("tableCellWidth").value);
-    var cellHeightUnits = parseFloat(document.getElementById("tableCellHeight").value);
-    
-    if (isNaN(cols) || isNaN(rows) || cols < 1 || rows < 1) {
-        showStatus("Bitte gültige Spalten- und Zeilenanzahl eingeben!", "error");
-        return;
+function buildTable(ctx,slide,cols,rows,cw,ch){
+    var wCm=cw*gridUnitCm,hCm=ch*gridUnitCm,sp=gridUnitCm;
+    var wPt=c2p(wCm),hPt=c2p(hCm),spPt=c2p(sp);
+    var x0=c2p(8*gridUnitCm),y0=c2p(17*gridUnitCm);
+    for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){
+        var s=slide.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
+        s.left=x0+(c*(wPt+spPt));s.top=y0+(r*(hPt+spPt));s.width=wPt;s.height=hPt;
+        s.fill.setSolidColor("FFFFFF");s.lineFormat.color="808080";s.lineFormat.weight=0.3;
+        s.name="TC_"+r+"_"+c;
     }
-    
-    if (isNaN(cellWidthUnits) || isNaN(cellHeightUnits) || cellWidthUnits < 1 || cellHeightUnits < 1) {
-        showStatus("Bitte gültige Breite und Höhe eingeben!", "error");
-        return;
-    }
-    
-    if (cols > 15) {
-        showStatus("⚠️ Maximale Spaltenanzahl: 15", "warning");
-        return;
-    }
-    
-    if (rows > 20) {
-        showStatus("⚠️ Maximale Zeilenanzahl: 20", "warning");
-        return;
-    }
-    
-    PowerPoint.run(function (context) {
-        var selectedSlides = context.presentation.getSelectedSlides();
-        selectedSlides.load("items");
-        
-        return context.sync().then(function () {
-            var slide;
-            
-            if (selectedSlides.items.length > 0) {
-                slide = selectedSlides.items[0];
-            } else {
-                var slides = context.presentation.slides;
-                slides.load("items");
-                return context.sync().then(function () {
-                    if (slides.items.length === 0) {
-                        showStatus("Keine Folie vorhanden!", "error");
-                        return context.sync();
-                    }
-                    slide = slides.items[0];
-                    return createTableOnSlide(context, slide, cols, rows, cellWidthUnits, cellHeightUnits);
-                });
-            }
-            
-            return createTableOnSlide(context, slide, cols, rows, cellWidthUnits, cellHeightUnits);
+    return ctx.sync().then(function(){
+        showStatus(cols+"×"+rows+" Tabelle erstellt ✓","success");
+    });
+}
+
+// ===== SETUP =====
+function setSlideSize(){
+    var tw=785.5,th=547;
+    PowerPoint.run(function(ctx){
+        var ps=ctx.presentation.pageSetup;ps.load(["slideWidth","slideHeight"]);
+        return ctx.sync().then(function(){ps.slideWidth=tw;return ctx.sync()}).then(function(){ps.slideHeight=th;return ctx.sync()}).then(function(){
+            showStatus("Format: 27,711 × 19,297 cm ✓","success");
         });
-    }).catch(function (error) {
-        showStatus("Fehler: " + error.message, "error");
-    });
+    }).catch(function(e){showStatus("Fehler: "+e.message,"error")});
 }
 
-function createTableOnSlide(context, slide, cols, rows, cellWidthUnits, cellHeightUnits) {
-    var cellWidthCm = cellWidthUnits * gridUnitCm;
-    var cellHeightCm = cellHeightUnits * gridUnitCm;
-    var spacingCm = gridUnitCm;
-    
-    var cellWidthPt = cmToPoints(cellWidthCm);
-    var cellHeightPt = cmToPoints(cellHeightCm);
-    var spacingPt = cmToPoints(spacingCm);
-    
-    var startX = cmToPoints(8 * gridUnitCm);
-    var startY = cmToPoints(17 * gridUnitCm);
-    
-    for (var row = 0; row < rows; row++) {
-        for (var col = 0; col < cols; col++) {
-            var shape = slide.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
-            
-            shape.left = startX + (col * (cellWidthPt + spacingPt));
-            shape.top = startY + (row * (cellHeightPt + spacingPt));
-            shape.width = cellWidthPt;
-            shape.height = cellHeightPt;
-            
-            shape.fill.setSolidColor("FFFFFF");
-            shape.lineFormat.color = "808080";
-            shape.lineFormat.weight = 0.3;
-            
-            shape.name = "TableCell_" + row + "_" + col;
-        }
-    }
-    
-    return context.sync().then(function () {
-        var totalCells = cols * rows;
-        var totalWidthCm = (cols * cellWidthCm + (cols - 1) * spacingCm).toFixed(2);
-        var totalHeightCm = (rows * cellHeightCm + (rows - 1) * spacingCm).toFixed(2);
-        showStatus("Tabelle erstellt: " + cols + "×" + rows + " (" + totalCells + " Zellen) – " + totalWidthCm + "×" + totalHeightCm + " cm ✓", "success");
-    });
-}
-
-// ===== TAB 5: EXTRAS =====
-function setDroegeSlideSize() {
-    // ANGEPASST: 27,711 cm × 19,297 cm
-    // 27,711 cm = 785,51476 pt ≈ 785.5 pt
-    // 19,297 cm = 546,83961 pt ≈ 547 pt (bleibt gleich)
-    var targetWidth  = 785.5;  // GEÄNDERT von 786 pt
-    var targetHeight = 547;
-
-    PowerPoint.run(function (context) {
-        var pageSetup = context.presentation.pageSetup;
-        pageSetup.load(["slideWidth", "slideHeight"]);
-        return context.sync()
-            .then(function () {
-                pageSetup.slideWidth = targetWidth;
-                return context.sync();
-            })
-            .then(function () {
-                pageSetup.slideHeight = targetHeight;
-                return context.sync();
-            })
-            .then(function () {
-                showStatus("Papierformat gesetzt: 27,711 × 19,297 cm ✓", "success");
-            });
-    }).catch(function (error) {
-        showStatus("Fehler: " + error.message, "error");
-    });
-}
-
-function toggleGuidelines() {
-    PowerPoint.run(function (context) {
-        var masters = context.presentation.slideMasters;
-        masters.load("items");
-        
-        return context.sync().then(function () {
-            if (masters.items.length === 0) {
-                showStatus("Keine Folienmaster gefunden", "error");
-                return context.sync();
-            }
-            
-            var firstMaster = masters.items[0];
-            var shapes = firstMaster.shapes;
-            shapes.load("items");
-            
-            return context.sync().then(function () {
-                var existingGuidelines = [];
-                for (var i = 0; i < shapes.items.length; i++) {
-                    shapes.items[i].load("name");
-                }
-                
-                return context.sync().then(function () {
-                    for (var i = 0; i < shapes.items.length; i++) {
-                        if (shapes.items[i].name && shapes.items[i].name.indexOf(GUIDELINE_TAG) === 0) {
-                            existingGuidelines.push(shapes.items[i]);
-                        }
-                    }
-                    
-                    if (existingGuidelines.length > 0) {
-                        return removeGuidelines(context, masters.items);
-                    } else {
-                        return addGuidelines(context, masters.items);
-                    }
+function toggleGuides(){
+    PowerPoint.run(function(ctx){
+        var masters=ctx.presentation.slideMasters;masters.load("items");
+        return ctx.sync().then(function(){
+            if(!masters.items.length){showStatus("Kein Master!","error");return ctx.sync()}
+            var m0=masters.items[0],sh=m0.shapes;sh.load("items");
+            return ctx.sync().then(function(){
+                for(var i=0;i<sh.items.length;i++)sh.items[i].load("name");
+                return ctx.sync().then(function(){
+                    var existing=[];
+                    for(var i=0;i<sh.items.length;i++)if(sh.items[i].name&&sh.items[i].name.indexOf(GTAG)===0)existing.push(sh.items[i]);
+                    return existing.length>0?removeGuides(ctx,masters.items):addGuides(ctx,masters.items);
                 });
             });
         });
-    }).catch(function (error) {
-        showStatus("Fehler: " + error.message, "error");
-    });
+    }).catch(function(e){showStatus("Fehler: "+e.message,"error")});
 }
 
-function addGuidelines(context, masters) {
-    var guidelinePositions = [
-        { type: "vertical", gridUnits: 8 },
-        { type: "vertical", gridUnits: 126 },
-        { type: "horizontal", gridUnits: 5 },
-        { type: "horizontal", gridUnits: 9 },
-        { type: "horizontal", gridUnits: 15 },
-        { type: "horizontal", gridUnits: 17 },
-        { type: "horizontal", gridUnits: 86 }
+function addGuides(ctx,masters){
+    var pos=[
+        {t:"vertical",u:8},{t:"vertical",u:126},
+        {t:"horizontal",u:5},{t:"horizontal",u:9},{t:"horizontal",u:15},{t:"horizontal",u:17},{t:"horizontal",u:86}
     ];
-    
-    var lineWeightPt = 1.0;
-    
-    var pageSetup = context.presentation.pageSetup;
-    pageSetup.load(["slideWidth", "slideHeight"]);
-    
-    return context.sync().then(function () {
-        var slideWidth = pageSetup.slideWidth;
-        var slideHeight = pageSetup.slideHeight;
-        
-        masters.forEach(function (master) {
-            guidelinePositions.forEach(function (guideline) {
-                var positionPt = Math.round(cmToPoints(guideline.gridUnits * gridUnitCm));
-                var shape;
-                
-                if (guideline.type === "vertical") {
-                    shape = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
-                    shape.left = positionPt - Math.round(lineWeightPt / 2);
-                    shape.top = 0;
-                    shape.width = lineWeightPt;
-                    shape.height = slideHeight;
-                } else {
-                    shape = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
-                    shape.left = 0;
-                    shape.top = positionPt - Math.round(lineWeightPt / 2);
-                    shape.width = slideWidth;
-                    shape.height = lineWeightPt;
-                }
-                
-                shape.name = GUIDELINE_TAG + "_" + guideline.type + "_" + guideline.gridUnits;
-                shape.fill.setSolidColor("FF0000");
-                shape.lineFormat.visible = false;
+    var ps=ctx.presentation.pageSetup;ps.load(["slideWidth","slideHeight"]);
+    return ctx.sync().then(function(){
+        var sw=ps.slideWidth,sh=ps.slideHeight;
+        masters.forEach(function(master){
+            pos.forEach(function(g){
+                var pt=Math.round(c2p(g.u*gridUnitCm)),s;
+                if(g.t==="vertical"){s=master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);s.left=pt;s.top=0;s.width=1;s.height=sh}
+                else{s=master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);s.left=0;s.top=pt;s.width=sw;s.height=1}
+                s.name=GTAG+"_"+g.t+"_"+g.u;s.fill.setSolidColor("FF0000");s.lineFormat.visible=false;
             });
         });
-        
-        return context.sync().then(function () {
-            showStatus("Hilfslinien in allen Mastern eingeblendet ✓", "success");
-        });
+        return ctx.sync().then(function(){showStatus("Hilfslinien eingeblendet ✓","success")});
     });
 }
 
-function removeGuidelines(context, masters) {
-    var deletePromises = [];
-    
-    masters.forEach(function (master) {
-        var shapes = master.shapes;
-        shapes.load("items");
-        deletePromises.push(context.sync().then(function () {
-            for (var i = 0; i < shapes.items.length; i++) {
-                shapes.items[i].load("name");
-            }
-            return context.sync().then(function () {
-                for (var i = 0; i < shapes.items.length; i++) {
-                    if (shapes.items[i].name && shapes.items[i].name.indexOf(GUIDELINE_TAG) === 0) {
-                        shapes.items[i].delete();
-                    }
-                }
+function removeGuides(ctx,masters){
+    var proms=[];
+    masters.forEach(function(master){
+        var sh=master.shapes;sh.load("items");
+        proms.push(ctx.sync().then(function(){
+            for(var i=0;i<sh.items.length;i++)sh.items[i].load("name");
+            return ctx.sync().then(function(){
+                for(var i=0;i<sh.items.length;i++)if(sh.items[i].name&&sh.items[i].name.indexOf(GTAG)===0)sh.items[i].delete();
             });
         }));
     });
-    
-    return Promise.all(deletePromises).then(function () {
-        return context.sync().then(function () {
-            showStatus("Hilfslinien aus allen Mastern entfernt ✓", "success");
-        });
-    });
+    return Promise.all(proms).then(function(){return ctx.sync().then(function(){showStatus("Hilfslinien entfernt ✓","success")})});
+}
+
+function copyShadow(){
+    var t="Schatten-Standardwerte:\nFarbe: Schwarz\nTransparenz: 75 %\nGröße: 100 %\nWeichzeichnen: 4 pt\nWinkel: 90°\nAbstand: 1 pt";
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){showStatus("Kopiert ✓","success")}).catch(function(){showStatus("Kopieren fehlgeschlagen","error")});
+    else showStatus("Zwischenablage nicht verfügbar","error");
 }

@@ -8,385 +8,163 @@
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Grid Resize</h1>
-            <p class="build-info">Erstellt: 11.02.2026 19:26:10</p>
-            <p class="subtitle">Objekte rasterbasiert skalieren & ausrichten</p>
-        </div>
+<div class="app">
 
-        <!-- Settings -->
-        <div class="settings-section">
-            <label for="gridUnit">Rastereinheit (cm):</label>
-            <div class="input-row">
-                <button class="preset-btn active" data-value="0.21">0,21</button>
-                <button class="preset-btn" data-value="0.42">0,42</button>
-                <button class="preset-btn" data-value="0.63">0,63</button>
-                <button class="preset-btn" data-value="2.10">2,10</button>
-            </div>
-            <div class="custom-input-row">
-                <input type="number" id="gridUnit" value="0.21" step="0.01" min="0.01">
-                <span class="unit-label">cm</span>
-            </div>
-        </div>
+    <!-- HEADER -->
+    <div class="hdr">
+        <span class="logo">⬡</span>
+        <div><strong>Grid Resize</strong><br><span class="sub">12.02.2026 09:28:00</span></div>
+    </div>
 
-        <!-- Tab Navigation -->
-        <nav class="tab-nav">
-            <button class="tab-btn active" data-tab="tabSize">Größe</button>
-            <button class="tab-btn" data-tab="tabSnap">Raster</button>
-            <button class="tab-btn" data-tab="tabMatch">Angleichen</button>
-            <button class="tab-btn" data-tab="tabTable">Tabelle</button>
-            <button class="tab-btn" data-tab="tabExtras">Extras</button>
-        </nav>
+    <!-- RASTEREINHEIT -->
+    <div class="grid-bar">
+        <label>RE</label>
+        <button class="pre active" data-value="0.21">0,21</button>
+        <button class="pre" data-value="0.42">0,42</button>
+        <button class="pre" data-value="0.63">0,63</button>
+        <button class="pre" data-value="2.10">2,10</button>
+        <input type="number" id="gridUnit" value="0.21" step="0.01" min="0.01">
+        <span class="cm">cm</span>
+    </div>
 
-        <!-- Status Bar -->
-        <div id="status" class="status"></div>
+    <!-- STATUS -->
+    <div id="status" class="sts"></div>
 
-        <!-- TAB 1: SIZE -->
-        <div id="tabSize" class="tab-content active">
-            <div class="controls-section">
-                <h2>Horizontale Breite</h2>
-                <div class="button-row">
-                    <button id="shrinkWidth" class="action-btn shrink-btn">
-                        <span class="icon-arrows">◀ ▶</span><br>
-                        <span class="btn-label">− Breite</span>
-                    </button>
-                    <button id="growWidth" class="action-btn grow-btn">
-                        <span class="icon-arrows">▶ ◀</span><br>
-                        <span class="btn-label">+ Breite</span>
-                    </button>
-                </div>
-            </div>
+    <!-- TABS -->
+    <nav class="tabs">
+        <button class="tab active" data-tab="t1">Resize</button>
+        <button class="tab" data-tab="t2">Grid</button>
+        <button class="tab" data-tab="t3">Setup</button>
+    </nav>
 
-            <hr class="divider">
+    <!-- ============ TAB 1: RESIZE + MATCH ============ -->
+    <div id="t1" class="pane active">
 
-            <div class="controls-section">
-                <h2>Vertikale Höhe</h2>
-                <div class="button-row">
-                    <button id="shrinkHeight" class="action-btn shrink-btn">
-                        <span class="icon-arrows">▲ ▼</span><br>
-                        <span class="btn-label">− Höhe</span>
-                    </button>
-                    <button id="growHeight" class="action-btn grow-btn">
-                        <span class="icon-arrows">▼ ▲</span><br>
-                        <span class="btn-label">+ Höhe</span>
-                    </button>
-                </div>
-            </div>
+        <!-- RESIZE: Width / Height / Both -->
+        <div class="sec">
+            <div class="sec-head">Größe ändern</div>
+            <div class="resize-grid">
+                <span class="rlbl">W</span>
+                <button id="shrinkWidth" class="ib red" title="Breite verkleinern">−</button>
+                <button id="growWidth" class="ib grn" title="Breite vergrößern">+</button>
 
-            <hr class="divider">
+                <span class="rlbl">H</span>
+                <button id="shrinkHeight" class="ib red" title="Höhe verkleinern">−</button>
+                <button id="growHeight" class="ib grn" title="Höhe vergrößern">+</button>
 
-            <div class="controls-section">
-                <h2>Beide Richtungen</h2>
-                <div class="button-row">
-                    <button id="shrinkBoth" class="action-btn shrink-btn">
-                        <span class="icon-big">⇲</span><br>
-                        <span class="btn-label">− Beides</span>
-                    </button>
-                    <button id="growBoth" class="action-btn grow-btn">
-                        <span class="icon-big">⇱</span><br>
-                        <span class="btn-label">+ Beides</span>
-                    </button>
-                </div>
-            </div>
+                <span class="rlbl">W+H</span>
+                <button id="shrinkBoth" class="ib red" title="Beides verkleinern">−</button>
+                <button id="growBoth" class="ib grn" title="Beides vergrößern">+</button>
 
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Proportionale Skalierung</h2>
-                <p class="hint">Skaliert Breite um Rastereinheit, Höhe passt sich proportional an.</p>
-                <div class="button-row">
-                    <button id="propShrink" class="action-btn shrink-btn">
-                        <span class="icon-big">🔍</span><br>
-                        <span class="btn-label">− Proportional</span>
-                    </button>
-                    <button id="propGrow" class="action-btn grow-btn">
-                        <span class="icon-big">🔎</span><br>
-                        <span class="btn-label">+ Proportional</span>
-                    </button>
-                </div>
+                <span class="rlbl">⤢</span>
+                <button id="propShrink" class="ib red" title="Proportional verkleinern">−</button>
+                <button id="propGrow" class="ib grn" title="Proportional vergrößern">+</button>
             </div>
         </div>
 
-        <!-- TAB 2: SNAP -->
-        <div id="tabSnap" class="tab-content">
-            <div class="controls-section">
-                <h2>Position an Raster ausrichten</h2>
-                <p class="hint">Rundet die Position (links/oben) auf das nächste Vielfache der Rastereinheit.</p>
-                <button id="snapPosition" class="action-btn snap-btn full-btn">
-                    <span class="icon-big">☷</span><br>
-                    <span class="btn-label">Position einrasten</span>
-                </button>
+        <!-- MATCH -->
+        <div class="sec">
+            <div class="sec-head">Angleichen <span class="hint-inline">(min. 2 Objekte)</span></div>
+            <div class="match-grid">
+                <span class="rlbl"></span>
+                <span class="col-h">▲ Max</span>
+                <span class="col-h">▼ Min</span>
+
+                <span class="rlbl">W</span>
+                <button id="matchWidthMax" class="ib pur" title="Breite → größtes">⬛</button>
+                <button id="matchWidthMin" class="ib ora" title="Breite → kleinstes">⬜</button>
+
+                <span class="rlbl">H</span>
+                <button id="matchHeightMax" class="ib pur" title="Höhe → größtes">⬛</button>
+                <button id="matchHeightMin" class="ib ora" title="Höhe → kleinstes">⬜</button>
+
+                <span class="rlbl">W+H</span>
+                <button id="matchBothMax" class="ib pur" title="Beides → größtes">⬛</button>
+                <button id="matchBothMin" class="ib ora" title="Beides → kleinstes">⬜</button>
+
+                <span class="rlbl">⤢</span>
+                <button id="propMatchMax" class="ib pur" title="Proportional → größtes">⬛</button>
+                <button id="propMatchMin" class="ib ora" title="Proportional → kleinstes">⬜</button>
             </div>
+        </div>
+    </div>
 
-            <hr class="divider">
+    <!-- ============ TAB 2: GRID + SPACING + TABLE ============ -->
+    <div id="t2" class="pane">
 
-            <div class="controls-section">
-                <h2>Größe an Raster anpassen</h2>
-                <p class="hint">Rundet Breite und Höhe auf das nächste Vielfache der Rastereinheit.</p>
-                <button id="snapSize" class="action-btn snap-btn full-btn">
-                    <span class="icon-big">↔</span><br>
-                    <span class="btn-label">Größe einrasten</span>
-                </button>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Beides an Raster</h2>
-                <button id="snapBoth" class="action-btn snap-btn full-btn">
-                    <span class="icon-big">▦</span><br>
-                    <span class="btn-label">Alles einrasten</span>
-                </button>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Feste Abstände setzen</h2>
-                <p class="hint">Setzt den Abstand zwischen Objekten auf die Rastereinheit.</p>
-                <div class="button-row">
-                    <button id="setSpacingH" class="action-btn accent-btn">
-                        <span class="icon-arrows">↔</span><br>
-                        <span class="btn-label">Horizontal</span>
-                    </button>
-                    <button id="setSpacingV" class="action-btn accent-btn">
-                        <span class="icon-arrows">↕</span><br>
-                        <span class="btn-label">Vertikal</span>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Aktuelle Werte anzeigen</h2>
-                <button id="showInfo" class="action-btn info-btn full-btn">
-                    <span class="icon-big">ℹ</span><br>
-                    <span class="btn-label">Objektinfo anzeigen</span>
-                </button>
-                <div id="infoDisplay" class="info-display"></div>
+        <!-- SNAP -->
+        <div class="sec">
+            <div class="sec-head">Am Raster einrasten</div>
+            <div class="snap-row">
+                <button id="snapPosition" class="cb blu" title="Position einrasten">📍 Pos</button>
+                <button id="snapSize" class="cb blu" title="Größe einrasten">↔ Size</button>
+                <button id="snapBoth" class="cb blu-d" title="Beides einrasten">▦ Alles</button>
             </div>
         </div>
 
-        <!-- TAB 3: MATCH -->
-        <div id="tabMatch" class="tab-content">
-            <div class="controls-section">
-                <h2>Gleiche Breite</h2>
-                <p class="hint">Alle ausgewählten Objekte erhalten dieselbe Breite.</p>
-                <div class="button-row">
-                    <button id="matchWidthMax" class="action-btn align-btn">
-                        <span class="icon-arrows">→</span><br>
-                        <span class="btn-label">Größtes Objekt</span>
-                    </button>
-                    <button id="matchWidthMin" class="action-btn align-btn-alt">
-                        <span class="icon-arrows">←</span><br>
-                        <span class="btn-label">Kleinstes Objekt</span>
-                    </button>
-                </div>
+        <!-- SPACING -->
+        <div class="sec">
+            <div class="sec-head">Abstände <span class="hint-inline">(= 1 RE)</span></div>
+            <div class="snap-row">
+                <button id="setSpacingH" class="cb amb" title="Horizontale Abstände setzen">↔ H</button>
+                <button id="setSpacingV" class="cb amb" title="Vertikale Abstände setzen">↕ V</button>
+                <button id="showInfo" class="cb drk" title="Objektinfo anzeigen">ℹ Info</button>
             </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Gleiche Höhe</h2>
-                <p class="hint">Alle ausgewählten Objekte erhalten dieselbe Höhe.</p>
-                <div class="button-row">
-                    <button id="matchHeightMax" class="action-btn align-btn">
-                        <span class="icon-arrows">↓</span><br>
-                        <span class="btn-label">Größtes Objekt</span>
-                    </button>
-                    <button id="matchHeightMin" class="action-btn align-btn-alt">
-                        <span class="icon-arrows">↑</span><br>
-                        <span class="btn-label">Kleinstes Objekt</span>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Gleiche Größe (Breite & Höhe)</h2>
-                <p class="hint">Alle ausgewählten Objekte erhalten dieselbe Breite und Höhe.</p>
-                <div class="button-row">
-                    <button id="matchBothMax" class="action-btn align-btn">
-                        <span class="icon-big">↘</span><br>
-                        <span class="btn-label">Größtes Objekt</span>
-                    </button>
-                    <button id="matchBothMin" class="action-btn align-btn-alt">
-                        <span class="icon-big">↖</span><br>
-                        <span class="btn-label">Kleinstes Objekt</span>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Proportional angleichen</h2>
-                <p class="hint">Passt alle Objekte proportional an die Breite des kleinsten oder größten Objekts an.</p>
-                <div class="button-row">
-                    <button id="propMatchMax" class="action-btn align-btn">
-                        <span class="icon-big">↘</span><br>
-                        <span class="btn-label">Prop. größtes</span>
-                    </button>
-                    <button id="propMatchMin" class="action-btn align-btn-alt">
-                        <span class="icon-big">↖</span><br>
-                        <span class="btn-label">Prop. kleinstes</span>
-                    </button>
-                </div>
-            </div>
+            <div id="infoDisplay" class="info-box"></div>
         </div>
 
-        <!-- TAB 4: TABLE -->
-        <div id="tabTable" class="tab-content">
-            <div class="controls-section">
-                <h2>Raster-Tabelle erstellen</h2>
-                <p class="hint">Erstellt eine Tabelle aus einzelnen Rechtecken mit Rasterabstand.</p>
-                
-                <div class="table-input-group">
-                    <label>Spalten (max. 15):</label>
-                    <input type="number" id="tableColumns" value="5" min="1" max="15">
+        <!-- TABLE -->
+        <div class="sec">
+            <div class="sec-head">Raster-Tabelle</div>
+            <div class="tbl-form">
+                <div class="tbl-row">
+                    <label>Sp</label><input type="number" id="tableColumns" value="5" min="1" max="15" title="Spalten (max 15)">
+                    <label>Ze</label><input type="number" id="tableRows" value="5" min="1" max="20" title="Zeilen (max 20)">
                 </div>
-                
-                <div class="table-input-group">
-                    <label>Zeilen (max. 20):</label>
-                    <input type="number" id="tableRows" value="5" min="1" max="20">
+                <div class="tbl-row">
+                    <label>B</label><input type="number" id="tableCellWidth" value="5" min="1" step="1" title="Zellbreite (RE)">
+                    <label>H</label><input type="number" id="tableCellHeight" value="5" min="1" step="1" title="Zellhöhe (RE)">
                 </div>
-                
-                <div class="table-input-group">
-                    <label>Breite (Rastereinheiten):</label>
-                    <input type="number" id="tableCellWidth" value="5" min="1" step="1">
-                </div>
-                
-                <div class="table-input-group">
-                    <label>Höhe (Rastereinheiten):</label>
-                    <input type="number" id="tableCellHeight" value="5" min="1" step="1">
-                </div>
-                
-                <div class="table-info-box">
-                    <strong>Formatierung:</strong>
-                    <ul>
-                        <li>Füllfarbe: Weiß</li>
-                        <li>Linienfarbe: Grau</li>
-                        <li>Rahmenstärke: 0,3 pt</li>
-                        <li>Zellenabstand: 1 Rastereinheit</li>
-                    </ul>
-                    <strong>Position:</strong>
-                    <ul>
-                        <li>Von links: 8 Rastereinheiten</li>
-                        <li>Von oben: 17 Rastereinheiten</li>
-                    </ul>
-                </div>
-                
-                <button id="createTable" class="action-btn table-btn full-btn">
-                    <span class="icon-big">⊞</span><br>
-                    <span class="btn-label">Tabelle erstellen</span>
-                </button>
+                <button id="createTable" class="cb teal full" title="Tabelle auf aktueller Folie erstellen">⊞ Tabelle erstellen</button>
             </div>
         </div>
+    </div>
 
-        <!-- TAB 5: EXTRAS -->
-        <div id="tabExtras" class="tab-content">
-            <div class="controls-section">
-                <h2>Hilfslinien (Folienmaster)</h2>
-                <p class="hint">Fügt rote Hilfslinien (1 pt) in alle Folienmaster ein oder entfernt sie.</p>
-                <button id="toggleGuidelines" class="action-btn snap-btn full-btn">
-                    <span class="icon-big">📐</span><br>
-                    <span class="btn-label">Hilfslinien ein/aus</span>
-                </button>
-                <details style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 11px;">
-                    <summary style="cursor: pointer; font-weight: 600; margin-bottom: 6px;">📍 Positionen (Rastereinheiten):</summary>
-                    <ul style="margin: 6px 0 0 18px; line-height: 1.6;">
-                        <li><strong>Vertikal:</strong> 8, 126 (von links)</li>
-                        <li><strong>Horizontal:</strong> 5, 9, 15, 17, 86 (von oben)</li>
-                    </ul>
-                </details>
-            </div>
+    <!-- ============ TAB 3: SETUP ============ -->
+    <div id="t3" class="pane">
 
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Schatten – Standardwerte</h2>
-                <p class="hint">⚠️ Die PowerPoint JS-API unterstützt <strong>keine Schatten-Eigenschaften</strong>. Schatten müssen manuell gesetzt werden.</p>
-                
-                <details style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 12px;">
-                    <summary style="cursor: pointer; font-weight: 600; margin-bottom: 8px;">📖 So geht's:</summary>
-                    <ol style="margin: 8px 0 0 20px; line-height: 1.6;">
-                        <li>Objekt(e) auswählen</li>
-                        <li><strong>Rechtsklick</strong> → <em>Form formatieren</em></li>
-                        <li>Reiter <strong>„Effekte"</strong> (Fünfeck-Symbol)</li>
-                        <li><strong>Schatten</strong> aufklappen</li>
-                        <li>Folgende Werte eintragen:</li>
-                    </ol>
-                </details>
-
-                <div style="background: #f8f9fa; border-radius: 6px; padding: 12px; margin: 10px 0; font-size: 12px; line-height: 1.8;">
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Farbe:</span>
-                        <span>Schwarz</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Transparenz:</span>
-                        <span>75 %</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Größe:</span>
-                        <span>100 %</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Weichzeichnen:</span>
-                        <span>4 pt</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Winkel:</span>
-                        <span>90°</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                        <span style="font-weight: 600;">Abstand:</span>
-                        <span>1 pt</span>
-                    </div>
-                </div>
-
-                <button id="copyShadowText" class="action-btn info-btn full-btn">
-                    <span class="icon-big">📋</span><br>
-                    <span class="btn-label">Werte kopieren</span>
-                </button>
-                <p class="hint" style="margin-top: 8px; font-size: 11px;">Kopiert die Schatten-Werte als Text in die Zwischenablage.</p>
-            </div>
-
-            <hr class="divider">
-
-            <div class="controls-section">
-                <h2>Papierformat</h2>
-                <p class="hint">Setzt die Foliengröße auf das Droege-Format (27,711 × 19,297 cm).</p>
-                <button id="setSlideSize" class="action-btn accent-btn full-btn">
-                    <span class="icon-big">📄</span><br>
-                    <span class="btn-label">Droege-Format setzen</span>
-                </button>
-            </div>
+        <div class="sec">
+            <div class="sec-head">Papierformat</div>
+            <button id="setSlideSize" class="cb amb full" title="27,711 × 19,297 cm">📄 Droege-Format setzen <span class="dim">27,711 × 19,297 cm</span></button>
         </div>
 
-        <!-- Info Section -->
-        <div class="info-section">
-            <details>
-                <summary>ℹ️ Hinweise</summary>
+        <div class="sec">
+            <div class="sec-head">Hilfslinien (Master)</div>
+            <button id="toggleGuidelines" class="cb blu full" title="Rote Hilfslinien in allen Folienmastern ein-/ausblenden">📐 Hilfslinien ein/aus</button>
+            <details class="det">
+                <summary>Positionen</summary>
                 <ul>
-                    <li>Wähle ein oder mehrere Objekte auf der Folie aus.</li>
-                    <li>Nutze die Buttons, um Größe, Position oder Ausrichtung rasterbasiert anzupassen.</li>
-                    <li><strong>Größe:</strong> Ändert Breite/Höhe um die gewählte Rastereinheit. Bei mehreren Objekten werden Abstände beibehalten.</li>
-                    <li><strong>Raster:</strong> Rundet Position und/oder Größe auf das Raster. Setzt feste Abstände zwischen Objekten.</li>
-                    <li><strong>Angleichen:</strong> Gleicht Objekte an das größte oder kleinste an (min. 2 Objekte).</li>
-                    <li><strong>Tabelle:</strong> Erstellt eine Raster-Tabelle aus einzelnen Rechtecken.</li>
-                    <li><strong>Extras:</strong> Hilfslinien im Master, Schatten-Referenzwerte & Papierformat.</li>
+                    <li><b>V:</b> 8, 126 RE</li>
+                    <li><b>H:</b> 5, 9, 15, 17, 86 RE</li>
                 </ul>
             </details>
         </div>
 
-        <!-- Footer -->
-        <div class="footer">Droege Group – Grid Tool</div>
+        <div class="sec">
+            <div class="sec-head">Schatten-Referenz</div>
+            <div class="shadow-grid">
+                <span>Farbe</span><span>Schwarz</span>
+                <span>Transp.</span><span>75 %</span>
+                <span>Größe</span><span>100 %</span>
+                <span>Weichz.</span><span>4 pt</span>
+                <span>Winkel</span><span>90°</span>
+                <span>Abstand</span><span>1 pt</span>
+            </div>
+            <button id="copyShadowText" class="cb drk full" title="Schatten-Werte in Zwischenablage kopieren">📋 Werte kopieren</button>
+        </div>
     </div>
 
-    <script src="taskpane.js"></script>
+</div>
+<script src="taskpane.js"></script>
 </body>
 </html>
