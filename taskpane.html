@@ -32,40 +32,27 @@
 
     <!-- TABS -->
     <div class="tabs">
-        <button class="tab active" data-tab="pResize">Größe</button>
-        <button class="tab" data-tab="pGrid">Raster</button>
-        <button class="tab" data-tab="pMatch">Angleich</button>
+        <button class="tab active" data-tab="pMain">Tools</button>
         <button class="tab" data-tab="pExtras">Extras</button>
     </div>
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- TAB 1: RESIZE                          -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="pResize" class="pane active">
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TAB 1: TOOLS (Größe + Angleich + Raster)       -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div id="pMain" class="pane active">
 
+        <!-- RESIZE: 4 Buttons in einer Zeile -->
         <div class="sec">
-            <div class="sec-head">Breite <span class="hint">(Klick +  |  Shift −)</span></div>
+            <div class="sec-head">Größe <span class="hint">Klick + | Shift −</span></div>
             <div class="g4">
                 <button id="resizeW" class="sq grn" title="Breite ±1 RE">
                     <svg viewBox="0 0 24 24"><path d="M4 12h16M18 8l4 4-4 4M6 8L2 12l4 4"/></svg>
                     <span>W</span>
                 </button>
-            </div>
-        </div>
-
-        <div class="sec">
-            <div class="sec-head">Höhe <span class="hint">(Klick +  |  Shift −)</span></div>
-            <div class="g4">
                 <button id="resizeH" class="sq grn" title="Höhe ±1 RE">
                     <svg viewBox="0 0 24 24"><path d="M12 4v16M8 18l4 4 4-4M8 6l4-4 4 4"/></svg>
                     <span>H</span>
                 </button>
-            </div>
-        </div>
-
-        <div class="sec">
-            <div class="sec-head">Beides <span class="hint">(Klick +  |  Shift −)</span></div>
-            <div class="g4">
                 <button id="resizeBoth" class="sq grn" title="W+H ±1 RE">
                     <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16"/></svg>
                     <span>W+H</span>
@@ -77,103 +64,19 @@
             </div>
         </div>
 
-    </div>
-
-    <!-- ═══════════════════════════════════════ -->
-    <!-- TAB 2: RASTER / GRID                   -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="pGrid" class="pane">
-
+        <!-- ANGLEICH: 4 Buttons in einer Zeile -->
         <div class="sec">
-            <div class="sec-head">Snap to Grid</div>
-            <div class="g4">
-                <button id="snapPos" class="sq blu" title="Position einrasten">
-                    <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/></svg>
-                    <span>Pos</span>
-                </button>
-                <button id="snapSize" class="sq blu" title="Größe einrasten">
-                    <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16"/></svg>
-                    <span>Size</span>
-                </button>
-                <button id="snapAll" class="sq blu-d" title="Alles einrasten">
-                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-                    <span>Alles</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="sec">
-            <div class="sec-head">Abstände <span class="hint">(= 1 RE zwischen Objekten)</span></div>
-            <div class="g4">
-                <button id="spaceH" class="sq amb" title="Horizontaler Abstand">
-                    <svg viewBox="0 0 24 24"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg>
-                    <span>H</span>
-                </button>
-                <button id="spaceV" class="sq amb" title="Vertikaler Abstand">
-                    <svg viewBox="0 0 24 24"><path d="M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4"/></svg>
-                    <span>V</span>
-                </button>
-            </div>
-        </div>
-
-        <div class="sec">
-            <div class="sec-head">Info</div>
-            <div class="g4">
-                <button id="showInfo" class="sq drk" title="Objektinfo anzeigen">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                    <span>Info</span>
-                </button>
-            </div>
-            <div id="infoBox" class="info-box"></div>
-        </div>
-
-        <div class="sec">
-            <div class="sec-head">Grid-Tabelle erstellen</div>
-            <div class="tbl-form">
-                <div class="tbl-row">
-                    <label>Sp</label><input id="tCols" type="number" value="3" min="1" max="15">
-                    <label>Zl</label><input id="tRows" type="number" value="3" min="1" max="20">
-                    <label>B</label><input id="tCW" type="number" value="20" min="1" title="Zellenbreite in RE">
-                    <label>H</label><input id="tCH" type="number" value="10" min="1" title="Zellenhöhe in RE">
-                </div>
-            </div>
-            <button id="createTable" class="sq-wide teal">
-                <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-                Tabelle erstellen
-            </button>
-        </div>
-
-    </div>
-
-    <!-- ═══════════════════════════════════════ -->
-    <!-- TAB 3: ANGLEICHEN                      -->
-    <!-- ═══════════════════════════════════════ -->
-    <div id="pMatch" class="pane">
-
-        <div class="sec">
-            <div class="sec-head">Gleiche Breite <span class="hint">(Klick = Max | Shift = Min)</span></div>
+            <div class="sec-head">Angleichen <span class="hint">Klick Max | Shift Min</span></div>
             <div class="g4">
                 <button id="matchW" class="sq blu" title="Breite angleichen">
                     <svg viewBox="0 0 24 24"><path d="M4 12h16M18 8l4 4-4 4M6 8L2 12l4 4"/></svg>
                     <span>W</span>
                 </button>
-            </div>
-        </div>
-
-        <div class="sec">
-            <div class="sec-head">Gleiche Höhe <span class="hint">(Klick = Max | Shift = Min)</span></div>
-            <div class="g4">
                 <button id="matchH" class="sq blu" title="Höhe angleichen">
                     <svg viewBox="0 0 24 24"><path d="M12 4v16M8 18l4 4 4-4M8 6l4-4 4 4"/></svg>
                     <span>H</span>
                 </button>
-            </div>
-        </div>
-
-        <div class="sec">
-            <div class="sec-head">Gleiche Größe <span class="hint">(Klick = Max | Shift = Min)</span></div>
-            <div class="g4">
-                <button id="matchBoth" class="sq blu-d" title="Breite + Höhe angleichen">
+                <button id="matchBoth" class="sq blu-d" title="W+H angleichen">
                     <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>
                     <span>W+H</span>
                 </button>
@@ -184,11 +87,67 @@
             </div>
         </div>
 
+        <!-- RASTER & ABSTÄNDE -->
+        <div class="sec">
+            <div class="sec-head">Raster & Abstände</div>
+
+            <!-- Zeile 1: Einrasten -->
+            <div class="row-label">Einrasten</div>
+            <div class="g4">
+                <button id="snapPos" class="sq amb" title="Position einrasten">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/></svg>
+                    <span>Pos</span>
+                </button>
+                <button id="snapSize" class="sq amb" title="Größe einrasten">
+                    <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16"/></svg>
+                    <span>Size</span>
+                </button>
+                <button id="snapAll" class="sq amb-d" title="Alles einrasten">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                    <span>Alles</span>
+                </button>
+                <button id="showInfo" class="sq drk" title="Objektinfo">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    <span>Info</span>
+                </button>
+            </div>
+
+            <!-- Zeile 2: Abstände -->
+            <div class="row-label" style="margin-top:6px">Abstand = 1 RE</div>
+            <div class="g4">
+                <button id="spaceH" class="sq teal" title="Horizontaler Abstand = 1 RE">
+                    <svg viewBox="0 0 24 24"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg>
+                    <span>H</span>
+                </button>
+                <button id="spaceV" class="sq teal" title="Vertikaler Abstand = 1 RE">
+                    <svg viewBox="0 0 24 24"><path d="M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4"/></svg>
+                    <span>V</span>
+                </button>
+            </div>
+
+            <div id="infoBox" class="info-box"></div>
+        </div>
+
+        <!-- GRID TABLE -->
+        <div class="sec">
+            <div class="sec-head">Grid-Tabelle</div>
+            <div class="tbl-inline">
+                <label>Sp</label><input id="tCols" type="number" value="3" min="1" max="15">
+                <label>Zl</label><input id="tRows" type="number" value="3" min="1" max="20">
+                <label>B</label><input id="tCW" type="number" value="20" min="1" title="Zellenbreite in RE">
+                <label>H</label><input id="tCH" type="number" value="10" min="1" title="Zellenhöhe in RE">
+                <button id="createTable" class="sq teal" title="Tabelle erstellen">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                    <span>Go</span>
+                </button>
+            </div>
+        </div>
+
     </div>
 
-    <!-- ═══════════════════════════════════════ -->
-    <!-- TAB 4: EXTRAS                          -->
-    <!-- ═══════════════════════════════════════ -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- TAB 2: EXTRAS                                  -->
+    <!-- ═══════════════════════════════════════════════ -->
     <div id="pExtras" class="pane">
 
         <div class="sec">
@@ -206,8 +165,7 @@
                 Ein-/Ausblenden
             </button>
             <div class="guide-info">
-                <span>Vertikal: <b>8 RE</b>, <b>126 RE</b></span>
-                <span>Horizontal: <b>5</b>, <b>9</b>, <b>15</b>, <b>17</b>, <b>86 RE</b></span>
+                <span>V: <b>8</b>, <b>126 RE</b> · H: <b>5</b>, <b>9</b>, <b>15</b>, <b>17</b>, <b>86 RE</b></span>
             </div>
         </div>
 

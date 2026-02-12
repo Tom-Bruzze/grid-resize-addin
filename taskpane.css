@@ -1,4 +1,4 @@
-/* ===== DROEGE Grid Resize Tool – Complete CSS ===== */
+/* ===== DROEGE Grid Resize Tool – CSS ===== */
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e0;font-size:13px;overflow-y:auto;min-height:100vh}
 .app{max-width:400px;margin:0 auto;padding:8px}
@@ -19,8 +19,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 .grid-bar input:focus{outline:none;border-color:#e94560}
 .cm{font-size:9px;color:#5a6a8a}
 
-/* STATUS (permanent) */
-.sts{padding:6px 8px;border-radius:6px;font-size:10px;font-weight:600;text-align:center;color:#fff;margin-bottom:6px;background:#2a3a5c;min-height:26px;display:flex;align-items:center;justify-content:center}
+/* STATUS */
+.sts{padding:5px 8px;border-radius:6px;font-size:10px;font-weight:600;text-align:center;color:#fff;margin-bottom:6px;background:#2a3a5c;min-height:24px;display:flex;align-items:center;justify-content:center}
 .sts.success{background:#27ae60}
 .sts.error{background:#e74c3c}
 .sts.warning{background:#f39c12}
@@ -34,15 +34,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 
 /* PANES */
 .pane{display:none}
-.pane.active{display:block;animation:fadeUp .15s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.pane.active{display:block;animation:fadeUp .12s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
 
 /* SECTIONS */
-.sec{background:#16213e;border-radius:7px;padding:8px 10px;margin-bottom:5px}
-.sec-head{font-size:10px;font-weight:700;text-transform:uppercase;color:#e94560;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.sec{background:#16213e;border-radius:7px;padding:7px 10px;margin-bottom:5px}
+.sec-head{font-size:10px;font-weight:700;text-transform:uppercase;color:#e94560;letter-spacing:.5px;margin-bottom:5px;display:flex;align-items:center;gap:6px}
 .hint{font-size:9px;font-weight:400;color:#5a6a8a;text-transform:none;letter-spacing:0}
 
-/* ── SQUARE BUTTONS (~1cm = 38px) ── */
+/* ROW LABEL (Einrasten / Abstand) */
+.row-label{font-size:8px;font-weight:700;color:#5a6a8a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+
+/* ── SQUARE BUTTONS ── */
 .sq{
     width:38px;height:38px;
     border:none;border-radius:6px;cursor:pointer;
@@ -60,6 +63,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 .sq.blu{background:linear-gradient(135deg,#2471a3,#2e86c1)}
 .sq.blu-d{background:linear-gradient(135deg,#1a5276,#21618c)}
 .sq.amb{background:linear-gradient(135deg,#d68910,#f39c12)}
+.sq.amb-d{background:linear-gradient(135deg,#b7770a,#d68910)}
 .sq.drk{background:linear-gradient(135deg,#2c3e50,#34495e)}
 .sq.teal{background:linear-gradient(135deg,#138d75,#16a085)}
 
@@ -74,13 +78,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 /* GRIDS */
 .g4{display:grid;grid-template-columns:repeat(4,38px);gap:4px;justify-content:start}
 .g3{display:grid;grid-template-columns:repeat(3,38px);gap:4px;justify-content:start}
-.g2{display:grid;grid-template-columns:repeat(2,38px);gap:4px;justify-content:start}
 
-/* WIDE BUTTON (table) */
+/* ── TABLE INLINE ── */
+.tbl-inline{display:flex;align-items:center;gap:3px}
+.tbl-inline label{font-size:9px;font-weight:700;color:#8899b3;min-width:12px;text-align:center}
+.tbl-inline input{width:32px;padding:4px 2px;border:1px solid #2a3a5c;background:#0a0e1a;color:#fff;border-radius:4px;font-size:11px;font-weight:600;text-align:center}
+.tbl-inline input:focus{outline:none;border-color:#e94560}
+
+/* WIDE BUTTON */
 .sq-wide{
     width:100%;height:32px;border:none;border-radius:6px;cursor:pointer;
     display:flex;align-items:center;justify-content:center;gap:6px;
-    color:#fff;font-size:11px;font-weight:700;margin-top:5px;
+    color:#fff;font-size:11px;font-weight:700;margin-top:4px;
     transition:all .12s;
 }
 .sq-wide svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -88,16 +97,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 .sq-wide.drk{background:linear-gradient(135deg,#2c3e50,#34495e)}
 .sq-wide:hover{filter:brightness(1.1);transform:translateY(-1px)}
 
-/* TABLE FORM */
-.tbl-form{margin-top:2px}
-.tbl-row{display:grid;grid-template-columns:18px 1fr 18px 1fr 18px 1fr 18px 1fr;gap:3px;align-items:center;margin-bottom:4px}
-.tbl-row label{font-size:9px;font-weight:700;color:#8899b3;text-align:center}
-.tbl-row input{padding:4px 4px;border:1px solid #2a3a5c;background:#0a0e1a;color:#fff;border-radius:4px;font-size:11px;font-weight:600;text-align:center;width:100%}
-.tbl-row input:focus{outline:none;border-color:#e94560}
-
 /* INFO BOX */
 .info-box{display:none;margin-top:5px;padding:6px 8px;background:#0a0e1a;border-radius:6px;border-left:3px solid #e94560;font-size:10px}
-.info-box.visible{display:block;animation:fadeUp .15s ease}
+.info-box.visible{display:block;animation:fadeUp .12s ease}
 .info-item{display:flex;justify-content:space-between;padding:1px 0}
 .info-label{color:#8899b3;font-weight:600}
 .info-value{color:#e94560;font-weight:700}
@@ -108,7 +110,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 .shadow-grid span:nth-child(even){color:#fff;font-weight:700;text-align:right}
 
 /* GUIDE INFO */
-.guide-info{display:flex;flex-direction:column;gap:2px;font-size:10px;color:#8899b3;padding:4px 8px;background:#0a0e1a;border-radius:5px;margin-top:4px}
+.guide-info{font-size:9px;color:#8899b3;padding:4px 8px;background:#0a0e1a;border-radius:5px;margin-top:4px;text-align:center}
 .guide-info b{color:#e94560}
 
 /* SCROLLBAR */

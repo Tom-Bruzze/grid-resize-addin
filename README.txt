@@ -1,41 +1,26 @@
 ═══════════════════════════════════════════════════════════
-DROEGE Grid Resize Tool – PowerPoint Add-In
+DROEGE Grid Resize Tool – Consolidated Edition
 ═══════════════════════════════════════════════════════════
 
-DATEIEN:
-  taskpane.html   – UI (4 Tabs: Größe, Raster, Angleich, Extras)
-  taskpane.css    – Dark-Theme Styling mit Square-Buttons
-  taskpane.js     – Komplette Logik (891 Zeilen, 25 Funktionen)
-  README.txt      – Diese Datei
+TABS:  2 (Tools + Extras)
 
-FEATURES:
-  ✓ Resize (W / H / W+H / Proportional) mit Multi-Row/Col Support
-  ✓ Snap to Grid (Position / Größe / Beides)
-  ✓ Spacing horizontal + vertikal (Multi-Row/Col)
-  ✓ Match Dimensions (Max/Min, proportional)
-  ✓ Grid-Tabelle erstellen (Spalten × Zeilen)
-  ✓ Papierformat: 27,728 × 19,297 cm
-  ✓ Hilfslinien im Master (Ein/Aus Toggle)
-  ✓ Schatten-Werte als Text kopieren
+TAB "Tools" – Layout:
+  ┌──────────────────────────────────────────────────────┐
+  │ GRÖSSE         [W] [H] [W+H] [Prop]   grün / lila   │
+  │ ANGLEICHEN     [W] [H] [W+H] [Prop]   blau / lila   │
+  │ RASTER & ABSTÄNDE                                    │
+  │   Einrasten    [Pos] [Size] [Alles] [Info]   amber   │
+  │   Abstand 1RE  [H] [V]                      teal    │
+  │ GRID-TABELLE   Sp__ Zl__ B__ H__ [Go]                │
+  └──────────────────────────────────────────────────────┘
+
+TAB "Extras":
+  • Papierformat 27,728 × 19,297 cm
+  • Hilfslinien im Master (Toggle)
+  • Schatten-Werte kopieren
 
 BEDIENUNG:
-  • Klick         = vergrößern / Max angleichen
-  • Shift+Klick   = verkleinern / Min angleichen
-  • Multi-Select  = Resize über mehrere Zeilen/Spalten
+  Klick         = vergrößern / Max angleichen
+  Shift+Klick   = verkleinern / Min angleichen
 
-MULTI-ROW/COL LOGIK:
-  Shapes werden automatisch nach Position gruppiert:
-  - Width-Resize  → Zeilen (gleiche Y-Position)
-  - Height-Resize → Spalten (gleiche X-Position)
-  - Abstände (Gaps) zwischen Shapes bleiben erhalten
-
-PAPIERFORMAT:
-  27,728 cm = 786 pt (Breite)
-  19,297 cm = 547 pt (Höhe)
-
-VORAUSSETZUNG:
-  PowerPointApi 1.5 (Desktop / Web)
-
-═══════════════════════════════════════════════════════════
-Droege Group – Grid Resize Tool
 ═══════════════════════════════════════════════════════════
