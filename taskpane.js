@@ -65,7 +65,14 @@ function initUI(){
 
 function bind(id,fn){document.getElementById(id).addEventListener("click",fn)}
 function upPre(v){document.querySelectorAll(".pre").forEach(function(b){b.classList.toggle("active",Math.abs(parseFloat(b.dataset.value)-v)<.001)})}
-function showStatus(m,t){var e=document.getElementById("status");e.textContent=m;e.className="sts visible "+(t||"info");setTimeout(function(){e.classList.remove("visible")},3000)}
+
+/* STATUS: dauerhaft sichtbar – Text bleibt stehen bis zur nächsten Aktion */
+function showStatus(m,t){
+    var e=document.getElementById("status");
+    e.textContent=m;
+    e.className="sts "+(t||"info");
+}
+
 function c2p(c){return c*CM}
 function p2c(p){return p/CM}
 function rnd(v){return Math.round(v/gridUnitCm)*gridUnitCm}
