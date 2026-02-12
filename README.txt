@@ -1,60 +1,43 @@
+═══════════════════════════════════════════════════
+ DROEGE Grid Resize Tool – README
+═══════════════════════════════════════════════════
 
-DROEGE GROUP - GRID RESIZE TOOL
-Ultra Compact Edition
-Erstellt: 12.02.2026 10:22:35
-================================================================
+ DATEIEN
+────────
+ taskpane.html   – HTML-Oberfläche (3 Tabs)
+ taskpane.css    – Dark Theme Styling
+ taskpane.js     – Komplette Logik
 
-DATEIEN:
-  taskpane.html  - UI-Struktur
-  taskpane.css   - Dark-Theme Styling (1cm x 1cm Buttons)
-  taskpane.js    - Komplette Logik mit Shift-Click
+ INSTALLATION
+─────────────
+ 1. Dateien in ein PowerPoint Web Add-in einbinden
+ 2. Office.js wird via CDN geladen
+ 3. Erfordert PowerPointApi 1.5 (Desktop/Web)
 
-================================================================
-BEDIENKONZEPT: SHIFT-CLICK
-================================================================
+ BEDIENUNG
+──────────
+ TAB 1 – RESIZE:
+   Klick    = +1 Rastereinheit (vergrößern / Max)
+   Shift    = -1 Rastereinheit (verkleinern / Min)
 
-Jeder Button hat 2 Funktionen:
-  Klick        = Primaere Aktion (vergroessern / Max)
-  Shift+Klick  = Umkehrung       (verkleinern / Min)
+ TAB 2 – GRID:
+   Snap     = Position/Größe auf Raster einrasten
+   H-Dist   = Horizontale Abstände = 1 RE
+              (funktioniert über MEHRERE ZEILEN)
+   V-Dist   = Vertikale Abstände = 1 RE
+              (funktioniert über MEHRERE SPALTEN)
+   Tabelle  = Rechteck-Raster erstellen
 
-TAB 1 - RESIZE (4 Buttons statt 8):
-  [W]     Klick: Breite +1RE        Shift: Breite -1RE
-  [H]     Klick: Hoehe +1RE         Shift: Hoehe -1RE
-  [W+H]   Klick: Beides +1RE        Shift: Beides -1RE
-  [Prop]  Klick: Proportional +1RE  Shift: Proportional -1RE
+ TAB 3 – SETUP:
+   Format   = Folienformat 27,711 x 19,297 cm
+   Guides   = Hilfslinien im Master ein/aus
+   Shadow   = Schatten-Werte kopieren
 
-TAB 1 - ANGLEICHEN (4 Buttons statt 8):
-  [W]     Klick: Breite -> Max      Shift: Breite -> Min
-  [H]     Klick: Hoehe -> Max       Shift: Hoehe -> Min
-  [W+H]   Klick: Beides -> Max      Shift: Beides -> Min
-  [Prop]  Klick: Prop -> Max        Shift: Prop -> Min
+ MULTI-ROW/COL SPACING
+──────────────────────
+ Objekte werden anhand ihrer Position automatisch
+ in Zeilen (horizontal) bzw. Spalten (vertikal)
+ gruppiert. So können z.B. 6 Objekte in einem
+ 2x3 Grid auf einmal korrekt beabstandet werden.
 
-TAB 2 - GRID:
-  [Pos]   Position einrasten
-  [Size]  Groesse einrasten
-  [Alles] Beides einrasten
-  [Info]  Objektinfo anzeigen
-  [H]     Horizontale Abstaende = 1 RE
-  [V]     Vertikale Abstaende = 1 RE
-  Tabelle erstellen (Spalten, Zeilen, Zellgroesse)
-
-TAB 3 - SETUP:
-  [Format]  Droege-Papierformat setzen (27,711 x 19,297 cm)
-  [Guides]  Hilfslinien im Master ein/aus
-  [Shadow]  Schatten-Werte in Zwischenablage
-
-================================================================
-BUTTONS:
-  38x38px (ca. 1cm x 1cm)
-  SVG-Icons mit Label
-  Shift-Symbol erscheint beim Hover
-
-STATUS:
-  Dauerhaft sichtbar
-  Text bleibt bis zur naechsten Aktion
-
-VORAUSSETZUNGEN:
-  PowerPoint Desktop (Win/Mac) oder PowerPoint Web
-  PowerPointApi 1.5
-
-(c) 2026 DROEGE GROUP
+═══════════════════════════════════════════════════
