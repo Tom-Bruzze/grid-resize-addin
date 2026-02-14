@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>Grid Resize Tool</title>
     <link rel="stylesheet" href="taskpane.css">
     <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
@@ -12,180 +12,120 @@
 
     <!-- HEADER -->
     <div class="hdr">
-        <span class="logo">▦</span>
-        <div><strong>Grid Resize <span class="sub">by Droege Group</span></strong>
-        <div class="build">Build 14.02.2026 13:21</div></div>
+        <span class="logo">&#9638;</span>
+        <div>
+            <div class="title"><b>Grid Resize by Droege Group</b></div>
+            <div class="build">Build 14.02.2026 13:21</div>
+        </div>
     </div>
 
-    <!-- RASTEREINHEIT -->
-    <div class="grid-bar">
-        <label>RE</label>
-        <button class="pre active" data-value="0.21">0,21</button>
-        <button class="pre" data-value="0.42">0,42</button>
+    <!-- Rastereinheit -->
+    <div class="sec re-sec">
+        <span class="lbl">RE</span>
+        <button class="pre" data-value="0.21">0,21</button>
+        <button class="pre active" data-value="0.42">0,42</button>
         <button class="pre" data-value="0.63">0,63</button>
         <button class="pre" data-value="2.10">2,10</button>
-        <input type="number" id="gridUnit" value="0.21" step="0.01" min="0.01">
-        <span class="cm">cm</span>
+        <input id="gridUnit" class="re-in" type="number" step="0.01" min="0.01" value="0.21"> <span class="lbl">cm</span>
     </div>
 
-    <!-- STATUS -->
-    <div id="status" class="sts">Bereit</div>
+    <!-- Status -->
+    <div id="status" class="sts info">Bereit</div>
 
     <!-- TABS -->
     <div class="tabs">
-        <button class="tab active" data-tab="pMain">Tools</button>
-        <button class="tab" data-tab="pExtras">Extras</button>
+        <button class="tab active" data-tab="paneTools">Tools</button>
+        <button class="tab" data-tab="paneExtras">Extras</button>
     </div>
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- TAB 1: TOOLS (Größe + Angleich + Raster)       -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <div id="pMain" class="pane active">
+    <!-- ══════════ TAB: Tools ══════════ -->
+    <div id="paneTools" class="pane active">
 
-        <!-- RESIZE: 4 Buttons in einer Zeile -->
+        <!-- Größe -->
         <div class="sec">
-            <div class="sec-head">Größe <span class="hint">Klick + | Shift −</span></div>
-            <div class="g4">
-                <button id="resizeW" class="sq grn" title="Breite ±1 RE">
-                    <svg viewBox="0 0 24 24"><path d="M4 12h16M18 8l4 4-4 4M6 8L2 12l4 4"/></svg>
-                    <span>W</span>
-                </button>
-                <button id="resizeH" class="sq grn" title="Höhe ±1 RE">
-                    <svg viewBox="0 0 24 24"><path d="M12 4v16M8 18l4 4 4-4M8 6l4-4 4 4"/></svg>
-                    <span>H</span>
-                </button>
-                <button id="resizeBoth" class="sq grn" title="W+H ±1 RE">
-                    <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16"/></svg>
-                    <span>W+H</span>
-                </button>
-                <button id="resizeProp" class="sq pur" title="Proportional ±1 RE">
-                    <svg viewBox="0 0 24 24"><path d="M4 4l16 16M15 4h5v5M9 20H4v-5"/></svg>
-                    <span>Prop</span>
-                </button>
+            <div class="sec-title">Größe <span class="hint">Klick + | Shift &minus;</span></div>
+            <div class="row">
+                <button id="resizeW"    class="sq grn">W</button>
+                <button id="resizeH"    class="sq grn">H</button>
+                <button id="resizeBoth" class="sq grn">W+H</button>
+                <button id="resizeProp" class="sq grn">Prop</button>
             </div>
         </div>
 
-        <!-- ANGLEICH: 4 Buttons in einer Zeile -->
+        <!-- Angleichen -->
         <div class="sec">
-            <div class="sec-head">Angleichen <span class="hint">Klick Max | Shift Min</span></div>
-            <div class="g4">
-                <button id="matchW" class="sq blu" title="Breite angleichen">
-                    <svg viewBox="0 0 24 24"><path d="M4 12h16M18 8l4 4-4 4M6 8L2 12l4 4"/></svg>
-                    <span>W</span>
-                </button>
-                <button id="matchH" class="sq blu" title="Höhe angleichen">
-                    <svg viewBox="0 0 24 24"><path d="M12 4v16M8 18l4 4 4-4M8 6l4-4 4 4"/></svg>
-                    <span>H</span>
-                </button>
-                <button id="matchBoth" class="sq blu-d" title="W+H angleichen">
-                    <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>
-                    <span>W+H</span>
-                </button>
-                <button id="matchProp" class="sq pur" title="Proportional angleichen">
-                    <svg viewBox="0 0 24 24"><path d="M4 4l16 16M15 4h5v5M9 20H4v-5"/></svg>
-                    <span>Prop</span>
-                </button>
+            <div class="sec-title">Angleichen <span class="hint">Klick Max | Shift Min</span></div>
+            <div class="row">
+                <button id="matchW"    class="sq pur">W</button>
+                <button id="matchH"    class="sq pur">H</button>
+                <button id="matchBoth" class="sq pur">W+H</button>
+                <button id="matchProp" class="sq pur">Prop</button>
             </div>
         </div>
 
-        <!-- RASTER & ABSTÄNDE -->
+        <!-- Raster & Abstände -->
         <div class="sec">
-            <div class="sec-head">Raster & Abstände</div>
+            <div class="sec-title">Raster &amp; Abstände</div>
 
-            <!-- Zeile 1: Einrasten -->
-            <div class="row-label">Einrasten</div>
-            <div class="g4">
-                <button id="snapPos" class="sq amb" title="Position einrasten">
-                    <svg viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/></svg>
-                    <span>Pos</span>
-                </button>
-                <button id="snapSize" class="sq amb" title="Größe einrasten">
-                    <svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16"/></svg>
-                    <span>Size</span>
-                </button>
-                <button id="snapAll" class="sq amb-d" title="Alles einrasten">
-                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-                    <span>Alles</span>
-                </button>
-                <button id="showInfo" class="sq drk" title="Objektinfo">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                    <span>Info</span>
-                </button>
+            <div class="sub-title">Einrasten</div>
+            <div class="row">
+                <button id="snapPos"  class="sq blu">Pos</button>
+                <button id="snapSize" class="sq blu">Size</button>
+                <button id="snapAll"  class="sq blu">Alles</button>
+                <button id="showInfo" class="sq blu-d">Info</button>
             </div>
-
-            <!-- Zeile 2: Abstände -->
-            <div class="row-label" style="margin-top:6px">Abstand = 1 RE</div>
-            <div class="g4">
-                <button id="spaceH" class="sq teal" title="Horizontaler Abstand = 1 RE">
-                    <svg viewBox="0 0 24 24"><path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/></svg>
-                    <span>H</span>
-                </button>
-                <button id="spaceV" class="sq teal" title="Vertikaler Abstand = 1 RE">
-                    <svg viewBox="0 0 24 24"><path d="M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4"/></svg>
-                    <span>V</span>
-                </button>
-            </div>
-
             <div id="infoBox" class="info-box"></div>
-        </div>
 
-        <!-- GRID TABLE -->
-        <div class="sec">
-            <div class="sec-head">Grid-Tabelle</div>
-            <div class="tbl-inline">
-                <label>Sp</label><input id="tCols" type="number" value="3" min="1" max="15">
-                <label>Zl</label><input id="tRows" type="number" value="3" min="1" max="20">
-                <label>B</label><input id="tCW" type="number" value="20" min="1" title="Zellenbreite in RE">
-                <label>H</label><input id="tCH" type="number" value="10" min="1" title="Zellenhöhe in RE">
-                <button id="createTable" class="sq teal" title="Tabelle erstellen">
-                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-                    <span>Go</span>
-                </button>
+            <div class="sub-title">Abstand = 1 RE</div>
+            <div class="row">
+                <button id="spaceH" class="sq amb">H</button>
+                <button id="spaceV" class="sq amb">V</button>
             </div>
         </div>
 
+        <!-- Grid-Tabelle -->
+        <div class="sec">
+            <div class="sec-title">Grid-Tabelle</div>
+            <div class="row tbl-row">
+                <label class="tbl-lbl">Sp<input id="tCols" class="tbl-in" type="number" min="1" max="15" value="3"></label>
+                <label class="tbl-lbl">Zl<input id="tRows" class="tbl-in" type="number" min="1" max="20" value="3"></label>
+                <label class="tbl-lbl">B<input id="tCW" class="tbl-in" type="number" min="1" value="10"></label>
+                <label class="tbl-lbl">H<input id="tCH" class="tbl-in" type="number" min="1" value="5"></label>
+                <button id="createTable" class="sq blu go-btn">Go</button>
+            </div>
+        </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- TAB 2: EXTRAS                                  -->
-    <!-- ═══════════════════════════════════════════════ -->
-    <div id="pExtras" class="pane">
+    <!-- ══════════ TAB: Extras ══════════ -->
+    <div id="paneExtras" class="pane">
 
+        <!-- Papierformat -->
         <div class="sec">
-            <div class="sec-head">Papierformat</div>
-            <button id="setSlide" class="sq-wide teal">
-                <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>
-                27,728 × 19,297 cm
-            </button>
+            <div class="sec-title">Papierformat</div>
+            <div class="fmt-info">27,728 &times; 19,297 cm</div>
+            <button id="setSlide" class="btn-full">&#9635; Anwenden</button>
         </div>
 
+        <!-- Hilfslinien -->
         <div class="sec">
-            <div class="sec-head">Hilfslinien (Master)</div>
-            <button id="toggleGuides" class="sq-wide teal">
-                <svg viewBox="0 0 24 24"><path d="M3 3v18h18M7 12v5M11 8v9M15 10v7M19 6v11"/></svg>
-                Ein-/Ausblenden
-            </button>
-            <div class="guide-info">
-                <span>V: <b>8</b>, <b>126 RE</b> · H: <b>5</b>, <b>9</b>, <b>15</b>, <b>17</b>, <b>86 RE</b></span>
-            </div>
+            <div class="sec-title">Hilfslinien (Master)</div>
+            <button id="toggleGuides" class="btn-full">Ein-/Ausblenden</button>
+            <div class="guide-info">V: <b>8</b>, <b>126 RE</b> &middot; H: <b>5</b>, <b>9</b>, <b>15</b>, <b>17</b>, <b>86 RE</b></div>
         </div>
 
+        <!-- Schatten -->
         <div class="sec">
-            <div class="sec-head">Schatten-Werte</div>
+            <div class="sec-title">Schatten-Werte</div>
             <div class="shadow-grid">
-                <span>Farbe</span><span>Schwarz</span>
-                <span>Transparenz</span><span>75 %</span>
-                <span>Größe</span><span>100 %</span>
-                <span>Weichzeichnen</span><span>4 pt</span>
-                <span>Winkel</span><span>90°</span>
-                <span>Abstand</span><span>1 pt</span>
+                <div class="shd-item"><span class="shd-lbl">Farbe</span><span class="shd-val">Schwarz</span></div>
+                <div class="shd-item"><span class="shd-lbl">Transparenz</span><span class="shd-val">75 %</span></div>
+                <div class="shd-item"><span class="shd-lbl">Größe</span><span class="shd-val">100 %</span></div>
+                <div class="shd-item"><span class="shd-lbl">Weichzeichnen</span><span class="shd-val">4 pt</span></div>
+                <div class="shd-item"><span class="shd-lbl">Winkel</span><span class="shd-val">90°</span></div>
+                <div class="shd-item"><span class="shd-lbl">Abstand</span><span class="shd-val">1 pt</span></div>
             </div>
-            <button id="copyShadow" class="sq-wide drk" style="margin-top:4px">
-                <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-                Werte kopieren
-            </button>
+            <button id="copyShadow" class="btn-full">Werte kopieren</button>
         </div>
-
     </div>
 
 </div>
