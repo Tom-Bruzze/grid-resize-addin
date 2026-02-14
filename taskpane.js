@@ -342,55 +342,152 @@ function snap(mode) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   SPACING – Horizontal & Vertical (FIXED)
+   SPACING – Horizontal & Vertical (REWRITE v3)
    ══════════════════════════════════════════════════════════════
-   Bug-Fix: The original spacing function had issues with the
-   Promise chain – the inner ctx.sync() return was not properly
-   chained back to the outer withShapes callback. Fixed by
-   ensuring a single ctx.sync() at the end after all
-   modifications, and by reading shape properties (left, top,
-   width, height) correctly before repositioning.
+   Komplett neu geschrieben:
+   - Verwendet einen eigenen PowerPoint.run() Aufruf
+   - Liest zuerst ALLE Properties, speichert sie in einem
+     lokalen Array, berechnet neue Positionen, schreibt sie
+     zurück und synchronisiert einmal am Ende.
+   - Kein verschachteltes ctx.sync() / return-Problem mehr.
    ══════════════════════════════════════════════════════════════ */
 function spacing(dir) {
-    withShapes(2, function (ctx, items) {
-        items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
+    if (!apiOk) { showStatus("PowerPointApi 1.5 nötig", "error"); return; }
+
+    PowerPoint.run(function (ctx) {
+        var sel = ctx.presentation.getSelectedShapes();
+        sel.load("items");
+
         return ctx.sync().then(function () {
+            var items = sel.items;
+            if (items.length < 2) {
+                showStatus("Mind. 2 Objekte auswählen!", "error");
+                return;
+            }
+
+            /* Schritt 1: Alle relevanten Properties laden */
+            for (var i = 0; i < items.length; i++) {
+                items[i].load(["left", "top", "width", "height"]);
+            }
+
+            return ctx.sync();
+        }).then(function () {
+            var items = sel.items;
+            if (!items || items.length < 2) return;
+
             var sp = c2p(gridUnitCm);
             var tol = getTol();
 
-            if (dir === "horizontal") {
-                /* Group shapes into rows by similar Y position */
-                var rows = groupByPos(items, "y", tol);
-                rows.forEach(function (row) {
-                    if (row.length < 2) return;
-                    row.sort(function (a, b) { return a.left - b.left; });
-                    /* Reposition each shape after the first, preserving order */
-                    for (var i = 1; i < row.length; i++) {
-                        row[i].left = row[i - 1].left + row[i - 1].width + sp;
-                    }
-                });
-                return ctx.sync().then(function () {
-                    showStatus("H-Abstand " + gridUnitCm.toFixed(2) + " cm · " + rows.length + " Zl ✓", "success");
+            /* Schritt 2: Lokale Kopie der Daten erstellen */
+            var data = [];
+            for (var i = 0; i < items.length; i++) {
+                data.push({
+                    idx:    i,
+                    shape:  items[i],
+                    left:   items[i].left,
+                    top:    items[i].top,
+                    width:  items[i].width,
+                    height: items[i].height
                 });
             }
 
-            if (dir === "vertical") {
-                /* Group shapes into columns by similar X position */
-                var cols = groupByPos(items, "x", tol);
-                cols.forEach(function (col) {
-                    if (col.length < 2) return;
-                    col.sort(function (a, b) { return a.top - b.top; });
-                    /* Reposition each shape after the first, preserving order */
-                    for (var i = 1; i < col.length; i++) {
-                        col[i].top = col[i - 1].top + col[i - 1].height + sp;
+            var groupCount = 0;
+            var movedCount = 0;
+
+            if (dir === "horizontal") {
+                /* Shapes nach Y-Position gruppieren (= Zeilen) */
+                var rows = groupByData(data, "top", tol);
+                groupCount = rows.length;
+
+                for (var r = 0; r < rows.length; r++) {
+                    var row = rows[r];
+                    if (row.length < 2) continue;
+
+                    /* Links nach rechts sortieren */
+                    row.sort(function (a, b) { return a.left - b.left; });
+
+                    /* Erstes Shape bleibt, alle weiteren werden repositioniert */
+                    for (var i = 1; i < row.length; i++) {
+                        var newLeft = row[i - 1].left + row[i - 1].width + sp;
+                        row[i].left = newLeft;
+                        row[i].shape.left = newLeft;
+                        movedCount++;
                     }
-                });
-                return ctx.sync().then(function () {
-                    showStatus("V-Abstand " + gridUnitCm.toFixed(2) + " cm · " + cols.length + " Sp ✓", "success");
-                });
+                }
             }
+
+            if (dir === "vertical") {
+                /* Shapes nach X-Position gruppieren (= Spalten) */
+                var cols = groupByData(data, "left", tol);
+                groupCount = cols.length;
+
+                for (var c = 0; c < cols.length; c++) {
+                    var col = cols[c];
+                    if (col.length < 2) continue;
+
+                    /* Oben nach unten sortieren */
+                    col.sort(function (a, b) { return a.top - b.top; });
+
+                    /* Erstes Shape bleibt, alle weiteren werden repositioniert */
+                    for (var i = 1; i < col.length; i++) {
+                        var newTop = col[i - 1].top + col[i - 1].height + sp;
+                        col[i].top = newTop;
+                        col[i].shape.top = newTop;
+                        movedCount++;
+                    }
+                }
+            }
+
+            /* Schritt 3: Einmal am Ende synchronisieren */
+            return ctx.sync().then(function () {
+                var label = dir === "horizontal" ? "H" : "V";
+                var gLabel = dir === "horizontal" ? " Zl" : " Sp";
+                showStatus(label + "-Abstand " + gridUnitCm.toFixed(2) + " cm · " +
+                    groupCount + gLabel + " · " + movedCount + " verschoben ✓", "success");
+            });
         });
+    }).catch(function (e) {
+        showStatus("Spacing-Fehler: " + e.message, "error");
     });
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Hilfs-Gruppierung für Spacing (arbeitet mit lokalen Daten)
+   Gruppiert data-Objekte nach einer Property (top oder left)
+   mit einer Toleranz.
+   ────────────────────────────────────────────────────────────── */
+function groupByData(data, prop, tol) {
+    var groups = [];
+    var used = [];
+    for (var i = 0; i < data.length; i++) used[i] = false;
+
+    /* Sortieren nach der Gruppen-Property */
+    var sorted = data.slice().sort(function (a, b) { return a[prop] - b[prop]; });
+
+    /* Mapping: sortierte Indizes zu used-Indizes */
+    var idxMap = [];
+    for (var i = 0; i < sorted.length; i++) {
+        for (var j = 0; j < data.length; j++) {
+            if (sorted[i].idx === data[j].idx) { idxMap[i] = j; break; }
+        }
+    }
+
+    for (var i = 0; i < sorted.length; i++) {
+        if (used[idxMap[i]]) continue;
+        var g = [sorted[i]];
+        used[idxMap[i]] = true;
+        var ref = sorted[i][prop];
+
+        for (var j = i + 1; j < sorted.length; j++) {
+            if (used[idxMap[j]]) continue;
+            if (Math.abs(sorted[j][prop] - ref) <= tol) {
+                g.push(sorted[j]);
+                used[idxMap[j]] = true;
+            }
+        }
+        groups.push(g);
+    }
+    return groups;
 }
 
 /* ══════════════════════════════════════════════════════════════
