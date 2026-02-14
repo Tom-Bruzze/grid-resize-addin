@@ -8,6 +8,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 .logo{font-size:22px;color:#e94560}
 .hdr strong{font-size:14px;color:#fff;letter-spacing:.5px}
 .sub{font-size:9px;color:#7a8ba6;font-weight:400}
+.build{font-size:8px;color:#5a6a8a;margin-top:1px;letter-spacing:.3px}
 
 /* RASTEREINHEIT */
 .grid-bar{display:flex;align-items:center;gap:3px;padding:5px 8px;background:#16213e;border-radius:7px;margin-bottom:6px}

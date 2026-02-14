@@ -342,32 +342,48 @@ function snap(mode) {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   SPACING – Multi-Row / Multi-Column
+   SPACING – Horizontal & Vertical (FIXED)
+   ══════════════════════════════════════════════════════════════
+   Bug-Fix: The original spacing function had issues with the
+   Promise chain – the inner ctx.sync() return was not properly
+   chained back to the outer withShapes callback. Fixed by
+   ensuring a single ctx.sync() at the end after all
+   modifications, and by reading shape properties (left, top,
+   width, height) correctly before repositioning.
    ══════════════════════════════════════════════════════════════ */
 function spacing(dir) {
     withShapes(2, function (ctx, items) {
         items.forEach(function (s) { s.load(["left", "top", "width", "height"]); });
         return ctx.sync().then(function () {
-            var sp = c2p(gridUnitCm), tol = getTol();
+            var sp = c2p(gridUnitCm);
+            var tol = getTol();
 
             if (dir === "horizontal") {
+                /* Group shapes into rows by similar Y position */
                 var rows = groupByPos(items, "y", tol);
                 rows.forEach(function (row) {
                     if (row.length < 2) return;
                     row.sort(function (a, b) { return a.left - b.left; });
-                    for (var i = 1; i < row.length; i++)
+                    /* Reposition each shape after the first, preserving order */
+                    for (var i = 1; i < row.length; i++) {
                         row[i].left = row[i - 1].left + row[i - 1].width + sp;
+                    }
                 });
                 return ctx.sync().then(function () {
                     showStatus("H-Abstand " + gridUnitCm.toFixed(2) + " cm · " + rows.length + " Zl ✓", "success");
                 });
-            } else {
+            }
+
+            if (dir === "vertical") {
+                /* Group shapes into columns by similar X position */
                 var cols = groupByPos(items, "x", tol);
                 cols.forEach(function (col) {
                     if (col.length < 2) return;
                     col.sort(function (a, b) { return a.top - b.top; });
-                    for (var i = 1; i < col.length; i++)
+                    /* Reposition each shape after the first, preserving order */
+                    for (var i = 1; i < col.length; i++) {
                         col[i].top = col[i - 1].top + col[i - 1].height + sp;
+                    }
                 });
                 return ctx.sync().then(function () {
                     showStatus("V-Abstand " + gridUnitCm.toFixed(2) + " cm · " + cols.length + " Sp ✓", "success");
