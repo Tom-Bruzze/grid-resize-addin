@@ -42,7 +42,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 .sec-head{font-size:10px;font-weight:700;text-transform:uppercase;color:#e94560;letter-spacing:.5px;margin-bottom:5px;display:flex;align-items:center;gap:6px}
 .hint{font-size:9px;font-weight:400;color:#5a6a8a;text-transform:none;letter-spacing:0}
 
-/* ROW LABEL */
+/* ROW LABEL (Einrasten / Abstand) */
 .row-label{font-size:8px;font-weight:700;color:#5a6a8a;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
 
 /* ── SQUARE BUTTONS ── */
@@ -112,41 +112,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 /* GUIDE INFO */
 .guide-info{font-size:9px;color:#8899b3;padding:4px 8px;background:#0a0e1a;border-radius:5px;margin-top:4px;text-align:center}
 .guide-info b{color:#e94560}
-
-/* ═══════════════════════════════════════════════════
-   GANTT TAB – STYLES
-   ═══════════════════════════════════════════════════ */
-
-/* Row layout for Gantt controls */
-.gantt-row{display:flex;align-items:center;gap:4px}
-.gantt-row label{font-size:9px;font-weight:700;color:#8899b3;min-width:36px}
-.gantt-row select,
-.gantt-row input[type="number"]{
-    padding:4px 5px;border:1px solid #2a3a5c;background:#0a0e1a;color:#fff;
-    border-radius:4px;font-size:11px;font-weight:600;
-}
-.gantt-row select:focus,
-.gantt-row input:focus{outline:none;border-color:#e94560}
-.gantt-yr{width:56px;text-align:center}
-.gantt-sel{min-width:60px}
-.gantt-color{width:28px;height:24px;border:1px solid #2a3a5c;border-radius:4px;background:#0a0e1a;cursor:pointer;padding:1px}
-.gantt-color::-webkit-color-swatch-wrapper{padding:0}
-.gantt-color::-webkit-color-swatch{border:none;border-radius:2px}
-
-/* Task rows */
-.gantt-task{display:flex;align-items:center;gap:3px;margin-bottom:3px}
-.gantt-task input[type="text"]{
-    flex:1;padding:4px 6px;border:1px solid #2a3a5c;background:#0a0e1a;color:#fff;
-    border-radius:4px;font-size:10px;
-}
-.gantt-task select{
-    width:52px;padding:3px 2px;border:1px solid #2a3a5c;background:#0a0e1a;color:#fff;
-    border-radius:4px;font-size:10px;
-}
-.gantt-task input:focus,
-.gantt-task select:focus{outline:none;border-color:#e94560}
-
-.task-lbl{font-size:8px;color:#5a6a8a;font-weight:600;min-width:10px}
 
 /* SCROLLBAR */
 ::-webkit-scrollbar{width:3px}
