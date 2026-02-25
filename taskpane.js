@@ -96,6 +96,7 @@ function initUI() {
 
     /* ── Extras ── */
     bind("setSlide",     function () { setSlideSize();   });
+    bind("detectFmt",     function () { detectFmtSize();   });
     bind("toggleGuides", function () { toggleGuides();   });
     bind("copyShadow",   function () { copyShadowText(); });
 }
@@ -140,23 +141,24 @@ function getTol() {
    Robuster Algorithmus: Statt fehleranfälligem Floating-Point-Modulo
    wird die Anzahl passender Rastereinheiten gerundet.
    Funktioniert korrekt für alle Formate (16:9, 4:3, A4, A3, Letter, etc.). */
-/* ── Format-Erkennung & feste Raster-Offsets (0,21 cm Raster) ──
-   Gemessene erste Rasterpunkte aus PowerPoint pro Format.         */
+/* ── Feste Raster-Offsets (0,21 cm) – gemessen in PowerPoint ── */
 var GRID_OFFSETS = [
-    { name: "16:9",      w: 960.0,  h: 540.0,  ox: 0.10, oy: 0.00 },
-    { name: "4:3",       w: 914.4,  h: 685.8,  ox: 0.10, oy: 0.07 },
-    { name: "16:10",     w: 720.0,  h: 450.0,  ox: 0.10, oy: 0.17 },
-    { name: "A4 quer",   w: 841.89, h: 595.28, ox: 0.11, oy: 0.09 },
-    { name: "Breitbild", w: 786.0,  h: 547.0,  ox: 0.13, oy: 0.08 }
+    { name: "16:9",      ratio: 16/9,    ox: 0.10, oy: 0.00 },
+    { name: "4:3",       ratio: 4/3,     ox: 0.10, oy: 0.07 },
+    { name: "16:10",     ratio: 16/10,   ox: 0.10, oy: 0.17 },
+    { name: "A4 quer",   ratio: 297/210, ox: 0.11, oy: 0.09 },
+    { name: "Breitbild", ratio: 786/547, ox: 0.13, oy: 0.08 }
 ];
-
 function getGridOffsets(slideW, slideH) {
-    var tol = 2.0;
+    var r = slideW / slideH;
+    var bestIdx = -1, bestDiff = 999;
     for (var i = 0; i < GRID_OFFSETS.length; i++) {
-        var f = GRID_OFFSETS[i];
-        if (Math.abs(slideW - f.w) < tol && Math.abs(slideH - f.h) < tol) {
-            return { x: c2p(f.ox), y: c2p(f.oy), name: f.name };
-        }
+        var d = Math.abs(r - GRID_OFFSETS[i].ratio);
+        if (d < bestDiff) { bestDiff = d; bestIdx = i; }
+    }
+    if (bestIdx >= 0 && bestDiff < 0.02) {
+        var f = GRID_OFFSETS[bestIdx];
+        return { x: c2p(f.ox), y: c2p(f.oy), name: f.name };
     }
     return { x: 0, y: 0, name: "Unbekannt" };
 }
@@ -367,7 +369,7 @@ function snap(mode) {
             var items = sel.items;
             if (!items || items.length < 1) return;
 
-            /* ── Raster-Offset (Lookup-Tabelle) ── */
+            /* ── Raster-Offset (Lookup) ── */
             var gPt = c2p(gridUnitCm);
             var off = getGridOffsets(ps.slideWidth, ps.slideHeight);
             var offsetX = off.x;
@@ -389,7 +391,7 @@ function snap(mode) {
 
             return ctx.sync().then(function () {
                 var l = mode === "both" ? "Pos+Size" : mode === "position" ? "Position" : "Größe";
-                showStatus(l + " → Raster ✓ [" + off.name + "] (X:" + p2c(offsetX).toFixed(2) +
+                showStatus(l + " → " + off.name + " ✓ (X:" + p2c(offsetX).toFixed(2) +
                     " Y:" + p2c(offsetY).toFixed(2) + " cm)", "success");
             });
         });
@@ -437,7 +439,7 @@ function spacing(dir) {
             var sp = c2p(gridUnitCm);
             var tol = getTol();
 
-            /* Raster-Offset (Lookup-Tabelle, wie in snap) */
+            /* Raster-Offset (Lookup) */
             var gPt = c2p(gridUnitCm);
             var off = getGridOffsets(ps.slideWidth, ps.slideHeight);
             var offsetX = off.x;
@@ -692,22 +694,19 @@ function buildTbl(ctx, slide, cols, rows, cwRE, chRE) {
 /* ══════════════════════════════════════════════════════════════
    PAPIERFORMAT – 27,728 × 19,297 cm
    ══════════════════════════════════════════════════════════════ */
-/* ── Papierformat-Definitionen ── */
 var SLIDE_FORMATS = {
-    "16:9":      { w: 960.0,  h: 540.0,  label: "33,867 × 19,050 cm" },
-    "4:3":       { w: 914.4,  h: 685.8,  label: "32,258 × 24,192 cm" },
-    "16:10":     { w: 720.0,  h: 450.0,  label: "25,400 × 15,875 cm" },
-    "A4 quer":   { w: 841.89, h: 595.28, label: "29,700 × 21,000 cm" },
-    "Breitbild": { w: 786.0,  h: 547.0,  label: "27,728 × 19,297 cm" }
+    "16:9":      { w: 960.0,  h: 540.0,  label: "33,87 × 19,05 cm" },
+    "4:3":       { w: 914.4,  h: 685.8,  label: "32,26 × 24,19 cm" },
+    "16:10":     { w: 720.0,  h: 450.0,  label: "25,40 × 15,88 cm" },
+    "A4 quer":   { w: 841.89, h: 595.28, label: "29,70 × 21,00 cm" },
+    "Breitbild": { w: 786.0,  h: 547.0,  label: "27,73 × 19,30 cm" }
 };
-
 function setSlideSize() {
     var sel = document.getElementById("fmtSelect");
-    if (!sel) { showStatus("Format-Auswahl nicht gefunden", "error"); return; }
+    if (!sel) { showStatus("Format-Auswahl fehlt", "error"); return; }
     var key = sel.value;
     var fmt = SLIDE_FORMATS[key];
-    if (!fmt) { showStatus("Unbekanntes Format: " + key, "error"); return; }
-
+    if (!fmt) { showStatus("Unbekanntes Format", "error"); return; }
     PowerPoint.run(function (ctx) {
         var ps = ctx.presentation.pageSetup;
         ps.load(["slideWidth", "slideHeight"]);
@@ -719,6 +718,19 @@ function setSlideSize() {
             return ctx.sync();
         }).then(function () {
             showStatus("Format: " + key + " (" + fmt.label + ") ✓", "success");
+        });
+    }).catch(function (e) { showStatus("Fehler: " + e.message, "error"); });
+}
+function detectFormat() {
+    PowerPoint.run(function (ctx) {
+        var ps = ctx.presentation.pageSetup;
+        ps.load(["slideWidth", "slideHeight"]);
+        return ctx.sync().then(function () {
+            var off = getGridOffsets(ps.slideWidth, ps.slideHeight);
+            showStatus("Erkannt: " + off.name + " | " +
+                (ps.slideWidth/28.3465).toFixed(2) + " × " +
+                (ps.slideHeight/28.3465).toFixed(2) + " cm (" +
+                ps.slideWidth.toFixed(1) + " × " + ps.slideHeight.toFixed(1) + " pt)", "success");
         });
     }).catch(function (e) { showStatus("Fehler: " + e.message, "error"); });
 }
