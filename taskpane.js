@@ -354,16 +354,22 @@ function snap(mode) {
             var items = sel.items;
             if (!items || items.length < 1) return;
 
-            /* ── Raster-Snap ──
-               PowerPoint-Raster startet bei (0,0) – kein Offset nötig.
-               Einfaches Runden auf das nächste Vielfache der Rastereinheit. */
+            /* ── Raster-Offset berechnen ──
+               Das PowerPoint-Raster beginnt nicht bei 0,0 sondern hat
+               einen Rand. Der Offset ist der halbe Rest der Folienbreite/-höhe
+               geteilt durch die Rastereinheit.
+               Robuste Berechnung: statt fehleranfälligem Modulo wird die
+               Anzahl der Rastereinheiten gerundet und der Rest exakt ermittelt.
+               Dadurch funktioniert es korrekt für alle Formate (16:9, 4:3, A4, etc.). */
             var gPt = c2p(gridUnitCm);
+            var offsetX = gridOffset(ps.slideWidth,  gPt);
+            var offsetY = gridOffset(ps.slideHeight, gPt);
 
             for (var i = 0; i < items.length; i++) {
                 var s = items[i];
                 if (mode === "position" || mode === "both") {
-                    s.left = Math.round(s.left / gPt) * gPt;
-                    s.top  = Math.round(s.top  / gPt) * gPt;
+                    s.left = offsetX + Math.round((s.left - offsetX) / gPt) * gPt;
+                    s.top  = offsetY + Math.round((s.top  - offsetY) / gPt) * gPt;
                 }
                 if (mode === "size" || mode === "both") {
                     var nw = Math.round(s.width  / gPt) * gPt;
@@ -375,7 +381,8 @@ function snap(mode) {
 
             return ctx.sync().then(function () {
                 var l = mode === "both" ? "Pos+Size" : mode === "position" ? "Position" : "Größe";
-                showStatus(l + " → Raster ✓", "success");
+                showStatus(l + " → Raster ✓ (Offset X:" + p2c(offsetX).toFixed(3) +
+                    " Y:" + p2c(offsetY).toFixed(3) + " cm)", "success");
             });
         });
     }).catch(function (e) {
@@ -422,8 +429,10 @@ function spacing(dir) {
             var sp = c2p(gridUnitCm);
             var tol = getTol();
 
-            /* Raster-Snap (kein Offset – Raster startet bei 0,0) */
+            /* Raster-Offset berechnen (wie in snap) */
             var gPt = c2p(gridUnitCm);
+            var offsetX = gridOffset(ps.slideWidth,  gPt);
+            var offsetY = gridOffset(ps.slideHeight, gPt);
 
             /* Schritt 2: Lokale Kopie der Daten erstellen */
             var data = [];
@@ -454,7 +463,7 @@ function spacing(dir) {
                     row.sort(function (a, b) { return a.left - b.left; });
 
                     /* Erstes Shape ins Raster einrasten */
-                    var snappedLeft = Math.round(row[0].left / gPt) * gPt;
+                    var snappedLeft = offsetX + Math.round((row[0].left - offsetX) / gPt) * gPt;
                     row[0].left = snappedLeft;
                     row[0].shape.left = snappedLeft;
 
@@ -481,7 +490,7 @@ function spacing(dir) {
                     col.sort(function (a, b) { return a.top - b.top; });
 
                     /* Erstes Shape ins Raster einrasten */
-                    var snappedTop = Math.round(col[0].top / gPt) * gPt;
+                    var snappedTop = offsetY + Math.round((col[0].top - offsetY) / gPt) * gPt;
                     col[0].top = snappedTop;
                     col[0].shape.top = snappedTop;
 
