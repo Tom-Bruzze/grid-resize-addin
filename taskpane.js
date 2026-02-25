@@ -136,6 +136,18 @@ function getTol() {
     return t < 5 ? 5 : t;
 }
 
+/* Berechnet den Raster-Offset (halber Rand) für eine Foliendimension.
+   Robuster Algorithmus: Statt fehleranfälligem Floating-Point-Modulo
+   wird die Anzahl passender Rastereinheiten gerundet.
+   Funktioniert korrekt für alle Formate (16:9, 4:3, A4, A3, Letter, etc.). */
+function gridOffset(slidePt, gPt) {
+    var nExact = slidePt / gPt;
+    var nRound = Math.round(nExact);
+    var n = (Math.abs(nExact - nRound) < 0.01) ? nRound : Math.floor(nExact);
+    var remainder = slidePt - n * gPt;
+    return remainder / 2;
+}
+
 function withShapes(min, cb) {
     if (!apiOk) { showStatus("PowerPointApi 1.5 nötig", "error"); return; }
     PowerPoint.run(function (ctx) {
@@ -346,16 +358,12 @@ function snap(mode) {
                Das PowerPoint-Raster beginnt nicht bei 0,0 sondern hat
                einen Rand. Der Offset ist der halbe Rest der Folienbreite/-höhe
                geteilt durch die Rastereinheit.
-               Berechnung komplett in Points um Rundungsfehler zu vermeiden.
-               Floating-Point-Modulo kann bei exakten Vielfachen (z.B. A4)
-               einen Rest nahe gPt statt 0 liefern → clampen. */
+               Robuste Berechnung: statt fehleranfälligem Modulo wird die
+               Anzahl der Rastereinheiten gerundet und der Rest exakt ermittelt.
+               Dadurch funktioniert es korrekt für alle Formate (16:9, 4:3, A4, etc.). */
             var gPt = c2p(gridUnitCm);
-            var remX = ps.slideWidth  % gPt;
-            var remY = ps.slideHeight % gPt;
-            if (remX > gPt * 0.95 || remX < gPt * 0.05) remX = 0;
-            if (remY > gPt * 0.95 || remY < gPt * 0.05) remY = 0;
-            var offsetX = remX / 2;
-            var offsetY = remY / 2;
+            var offsetX = gridOffset(ps.slideWidth,  gPt);
+            var offsetY = gridOffset(ps.slideHeight, gPt);
 
             for (var i = 0; i < items.length; i++) {
                 var s = items[i];
@@ -421,14 +429,10 @@ function spacing(dir) {
             var sp = c2p(gridUnitCm);
             var tol = getTol();
 
-            /* Raster-Offset berechnen (wie in snap) – komplett in Points */
+            /* Raster-Offset berechnen (wie in snap) */
             var gPt = c2p(gridUnitCm);
-            var remX = ps.slideWidth  % gPt;
-            var remY = ps.slideHeight % gPt;
-            if (remX > gPt * 0.95 || remX < gPt * 0.05) remX = 0;
-            if (remY > gPt * 0.95 || remY < gPt * 0.05) remY = 0;
-            var offsetX = remX / 2;
-            var offsetY = remY / 2;
+            var offsetX = gridOffset(ps.slideWidth,  gPt);
+            var offsetY = gridOffset(ps.slideHeight, gPt);
 
             /* Schritt 2: Lokale Kopie der Daten erstellen */
             var data = [];
