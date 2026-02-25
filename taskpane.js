@@ -129,10 +129,7 @@ function showStatus(msg, type) {
 
 function c2p(cm) { return cm * CM; }
 function p2c(pt) { return pt / CM; }
-function rnd(v, offset) {
-    if (typeof offset === "undefined") offset = 0;
-    return offset + Math.round((v - offset) / gridUnitCm) * gridUnitCm;
-}
+function rnd(v)  { return Math.round(v / gridUnitCm) * gridUnitCm; }
 
 function getTol() {
     var t = c2p(gridUnitCm) * 0.5;
@@ -348,30 +345,30 @@ function snap(mode) {
             /* ── Raster-Offset berechnen ──
                Das PowerPoint-Raster beginnt nicht bei 0,0 sondern hat
                einen Rand. Der Offset ist der halbe Rest der Folienbreite/-höhe
-               geteilt durch die Rastereinheit. */
-            var g = gridUnitCm;
-            var slideWcm = p2c(ps.slideWidth);
-            var slideHcm = p2c(ps.slideHeight);
-            var offsetX = (slideWcm % g) / 2;
-            var offsetY = (slideHcm % g) / 2;
+               geteilt durch die Rastereinheit.
+               Berechnung komplett in Points um Rundungsfehler zu vermeiden. */
+            var gPt = c2p(gridUnitCm);
+            var offsetX = (ps.slideWidth  % gPt) / 2;
+            var offsetY = (ps.slideHeight % gPt) / 2;
 
             for (var i = 0; i < items.length; i++) {
                 var s = items[i];
                 if (mode === "position" || mode === "both") {
-                    s.left = c2p(rnd(p2c(s.left), offsetX));
-                    s.top  = c2p(rnd(p2c(s.top),  offsetY));
+                    s.left = offsetX + Math.round((s.left - offsetX) / gPt) * gPt;
+                    s.top  = offsetY + Math.round((s.top  - offsetY) / gPt) * gPt;
                 }
                 if (mode === "size" || mode === "both") {
-                    var nw = rnd(p2c(s.width)), nh = rnd(p2c(s.height));
-                    if (nw >= MIN) s.width  = c2p(nw);
-                    if (nh >= MIN) s.height = c2p(nh);
+                    var nw = Math.round(s.width  / gPt) * gPt;
+                    var nh = Math.round(s.height / gPt) * gPt;
+                    if (nw >= c2p(MIN)) s.width  = nw;
+                    if (nh >= c2p(MIN)) s.height = nh;
                 }
             }
 
             return ctx.sync().then(function () {
                 var l = mode === "both" ? "Pos+Size" : mode === "position" ? "Position" : "Größe";
-                showStatus(l + " → Raster ✓ (Offset X:" + offsetX.toFixed(3) +
-                    " Y:" + offsetY.toFixed(3) + " cm)", "success");
+                showStatus(l + " → Raster ✓ (Offset X:" + p2c(offsetX).toFixed(3) +
+                    " Y:" + p2c(offsetY).toFixed(3) + " cm)", "success");
             });
         });
     }).catch(function (e) {
@@ -418,12 +415,10 @@ function spacing(dir) {
             var sp = c2p(gridUnitCm);
             var tol = getTol();
 
-            /* Raster-Offset berechnen (wie in snap) */
-            var g = gridUnitCm;
-            var slideWcm = p2c(ps.slideWidth);
-            var slideHcm = p2c(ps.slideHeight);
-            var offsetX = (slideWcm % g) / 2;
-            var offsetY = (slideHcm % g) / 2;
+            /* Raster-Offset berechnen (wie in snap) – komplett in Points */
+            var gPt = c2p(gridUnitCm);
+            var offsetX = (ps.slideWidth  % gPt) / 2;
+            var offsetY = (ps.slideHeight % gPt) / 2;
 
             /* Schritt 2: Lokale Kopie der Daten erstellen */
             var data = [];
@@ -454,7 +449,7 @@ function spacing(dir) {
                     row.sort(function (a, b) { return a.left - b.left; });
 
                     /* Erstes Shape ins Raster einrasten */
-                    var snappedLeft = c2p(rnd(p2c(row[0].left), offsetX));
+                    var snappedLeft = offsetX + Math.round((row[0].left - offsetX) / gPt) * gPt;
                     row[0].left = snappedLeft;
                     row[0].shape.left = snappedLeft;
 
@@ -481,7 +476,7 @@ function spacing(dir) {
                     col.sort(function (a, b) { return a.top - b.top; });
 
                     /* Erstes Shape ins Raster einrasten */
-                    var snappedTop = c2p(rnd(p2c(col[0].top), offsetY));
+                    var snappedTop = offsetY + Math.round((col[0].top - offsetY) / gPt) * gPt;
                     col[0].top = snappedTop;
                     col[0].shape.top = snappedTop;
 
