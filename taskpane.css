@@ -91,3 +91,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 ::-webkit-scrollbar-track{background:#1a1a2e}
 ::-webkit-scrollbar-thumb{background:#2a2a4a;border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:#e94560}
+
+/* ── Format-Dropdown ── */
+.fmt-select {
+    width: 100%;
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 12px;
+    background: #fff;
+    color: #333;
+    cursor: pointer;
+}
+.fmt-select:focus {
+    border-color: #1A3A5C;
+    outline: none;
+}

@@ -140,12 +140,25 @@ function getTol() {
    Robuster Algorithmus: Statt fehleranfälligem Floating-Point-Modulo
    wird die Anzahl passender Rastereinheiten gerundet.
    Funktioniert korrekt für alle Formate (16:9, 4:3, A4, A3, Letter, etc.). */
-function gridOffset(slidePt, gPt) {
-    var nExact = slidePt / gPt;
-    var nRound = Math.round(nExact);
-    var n = (Math.abs(nExact - nRound) < 0.01) ? nRound : Math.floor(nExact);
-    var remainder = slidePt - n * gPt;
-    return remainder / 2;
+/* ── Format-Erkennung & feste Raster-Offsets (0,21 cm Raster) ──
+   Gemessene erste Rasterpunkte aus PowerPoint pro Format.         */
+var GRID_OFFSETS = [
+    { name: "16:9",      w: 960.0,  h: 540.0,  ox: 0.10, oy: 0.00 },
+    { name: "4:3",       w: 914.4,  h: 685.8,  ox: 0.10, oy: 0.07 },
+    { name: "16:10",     w: 720.0,  h: 450.0,  ox: 0.10, oy: 0.17 },
+    { name: "A4 quer",   w: 841.89, h: 595.28, ox: 0.11, oy: 0.09 },
+    { name: "Breitbild", w: 786.0,  h: 547.0,  ox: 0.13, oy: 0.08 }
+];
+
+function getGridOffsets(slideW, slideH) {
+    var tol = 2.0;
+    for (var i = 0; i < GRID_OFFSETS.length; i++) {
+        var f = GRID_OFFSETS[i];
+        if (Math.abs(slideW - f.w) < tol && Math.abs(slideH - f.h) < tol) {
+            return { x: c2p(f.ox), y: c2p(f.oy), name: f.name };
+        }
+    }
+    return { x: 0, y: 0, name: "Unbekannt" };
 }
 
 function withShapes(min, cb) {
@@ -354,16 +367,11 @@ function snap(mode) {
             var items = sel.items;
             if (!items || items.length < 1) return;
 
-            /* ── Raster-Offset berechnen ──
-               Das PowerPoint-Raster beginnt nicht bei 0,0 sondern hat
-               einen Rand. Der Offset ist der halbe Rest der Folienbreite/-höhe
-               geteilt durch die Rastereinheit.
-               Robuste Berechnung: statt fehleranfälligem Modulo wird die
-               Anzahl der Rastereinheiten gerundet und der Rest exakt ermittelt.
-               Dadurch funktioniert es korrekt für alle Formate (16:9, 4:3, A4, etc.). */
+            /* ── Raster-Offset (Lookup-Tabelle) ── */
             var gPt = c2p(gridUnitCm);
-            var offsetX = gridOffset(ps.slideWidth,  gPt);
-            var offsetY = gridOffset(ps.slideHeight, gPt);
+            var off = getGridOffsets(ps.slideWidth, ps.slideHeight);
+            var offsetX = off.x;
+            var offsetY = off.y;
 
             for (var i = 0; i < items.length; i++) {
                 var s = items[i];
@@ -381,8 +389,8 @@ function snap(mode) {
 
             return ctx.sync().then(function () {
                 var l = mode === "both" ? "Pos+Size" : mode === "position" ? "Position" : "Größe";
-                showStatus(l + " → Raster ✓ (Offset X:" + p2c(offsetX).toFixed(3) +
-                    " Y:" + p2c(offsetY).toFixed(3) + " cm)", "success");
+                showStatus(l + " → Raster ✓ [" + off.name + "] (X:" + p2c(offsetX).toFixed(2) +
+                    " Y:" + p2c(offsetY).toFixed(2) + " cm)", "success");
             });
         });
     }).catch(function (e) {
@@ -429,10 +437,11 @@ function spacing(dir) {
             var sp = c2p(gridUnitCm);
             var tol = getTol();
 
-            /* Raster-Offset berechnen (wie in snap) */
+            /* Raster-Offset (Lookup-Tabelle, wie in snap) */
             var gPt = c2p(gridUnitCm);
-            var offsetX = gridOffset(ps.slideWidth,  gPt);
-            var offsetY = gridOffset(ps.slideHeight, gPt);
+            var off = getGridOffsets(ps.slideWidth, ps.slideHeight);
+            var offsetX = off.x;
+            var offsetY = off.y;
 
             /* Schritt 2: Lokale Kopie der Daten erstellen */
             var data = [];
@@ -683,18 +692,33 @@ function buildTbl(ctx, slide, cols, rows, cwRE, chRE) {
 /* ══════════════════════════════════════════════════════════════
    PAPIERFORMAT – 27,728 × 19,297 cm
    ══════════════════════════════════════════════════════════════ */
+/* ── Papierformat-Definitionen ── */
+var SLIDE_FORMATS = {
+    "16:9":      { w: 960.0,  h: 540.0,  label: "33,867 × 19,050 cm" },
+    "4:3":       { w: 914.4,  h: 685.8,  label: "32,258 × 24,192 cm" },
+    "16:10":     { w: 720.0,  h: 450.0,  label: "25,400 × 15,875 cm" },
+    "A4 quer":   { w: 841.89, h: 595.28, label: "29,700 × 21,000 cm" },
+    "Breitbild": { w: 786.0,  h: 547.0,  label: "27,728 × 19,297 cm" }
+};
+
 function setSlideSize() {
+    var sel = document.getElementById("fmtSelect");
+    if (!sel) { showStatus("Format-Auswahl nicht gefunden", "error"); return; }
+    var key = sel.value;
+    var fmt = SLIDE_FORMATS[key];
+    if (!fmt) { showStatus("Unbekanntes Format: " + key, "error"); return; }
+
     PowerPoint.run(function (ctx) {
         var ps = ctx.presentation.pageSetup;
         ps.load(["slideWidth", "slideHeight"]);
         return ctx.sync().then(function () {
-            ps.slideWidth = 786;
+            ps.slideWidth = fmt.w;
             return ctx.sync();
         }).then(function () {
-            ps.slideHeight = 547;
+            ps.slideHeight = fmt.h;
             return ctx.sync();
         }).then(function () {
-            showStatus("Format: 27,728 × 19,297 cm ✓", "success");
+            showStatus("Format: " + key + " (" + fmt.label + ") ✓", "success");
         });
     }).catch(function (e) { showStatus("Fehler: " + e.message, "error"); });
 }
