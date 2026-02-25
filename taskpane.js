@@ -95,8 +95,7 @@ function initUI() {
     bind("createTable", function () { createGridTable(); });
 
     /* ── Extras ── */
-    bind("setSlide",     function () { setSlideSize();   });
-    bind("detectFmt",     function () { detectFmtSize();   });
+    bind("detectFmt",    function () { detectFormat();   });
     bind("toggleGuides", function () { toggleGuides();   });
     bind("copyShadow",   function () { copyShadowText(); });
 }
@@ -143,20 +142,20 @@ function getTol() {
    Funktioniert korrekt für alle Formate (16:9, 4:3, A4, A3, Letter, etc.). */
 /* ── Feste Raster-Offsets (0,21 cm) – gemessen in PowerPoint ── */
 var GRID_OFFSETS = [
-    { name: "16:9",      ratio: 16/9,    ox: 0.10, oy: 0.00 },
-    { name: "4:3",       ratio: 4/3,     ox: 0.10, oy: 0.07 },
-    { name: "16:10",     ratio: 16/10,   ox: 0.10, oy: 0.17 },
-    { name: "A4 quer",   ratio: 297/210, ox: 0.11, oy: 0.09 },
-    { name: "Breitbild", ratio: 786/547, ox: 0.13, oy: 0.08 }
+    { name: "16:9",      w: 960.0,   h: 540.0,   ox: 0.10, oy: 0.00 },
+    { name: "4:3",       w: 914.4,   h: 685.8,   ox: 0.10, oy: 0.069 },
+    { name: "16:10",     w: 720.0,   h: 450.0,   ox: 0.10, oy: 0.17 },
+    { name: "A4 quer",   w: 841.89,  h: 595.28,  ox: 0.11, oy: 0.07 },
+    { name: "Breitbild", w: 786.0,   h: 547.0,   ox: 0.13, oy: 0.07 }
 ];
 function getGridOffsets(slideW, slideH) {
-    var r = slideW / slideH;
     var bestIdx = -1, bestDiff = 999;
     for (var i = 0; i < GRID_OFFSETS.length; i++) {
-        var d = Math.abs(r - GRID_OFFSETS[i].ratio);
+        var f = GRID_OFFSETS[i];
+        var d = Math.abs(slideW - f.w) + Math.abs(slideH - f.h);
         if (d < bestDiff) { bestDiff = d; bestIdx = i; }
     }
-    if (bestIdx >= 0 && bestDiff < 0.02) {
+    if (bestIdx >= 0 && bestDiff < 10) {
         var f = GRID_OFFSETS[bestIdx];
         return { x: c2p(f.ox), y: c2p(f.oy), name: f.name };
     }
@@ -694,33 +693,6 @@ function buildTbl(ctx, slide, cols, rows, cwRE, chRE) {
 /* ══════════════════════════════════════════════════════════════
    PAPIERFORMAT – 27,728 × 19,297 cm
    ══════════════════════════════════════════════════════════════ */
-var SLIDE_FORMATS = {
-    "16:9":      { w: 960.0,  h: 540.0,  label: "33,87 × 19,05 cm" },
-    "4:3":       { w: 914.4,  h: 685.8,  label: "32,26 × 24,19 cm" },
-    "16:10":     { w: 720.0,  h: 450.0,  label: "25,40 × 15,88 cm" },
-    "A4 quer":   { w: 841.89, h: 595.28, label: "29,70 × 21,00 cm" },
-    "Breitbild": { w: 786.0,  h: 547.0,  label: "27,73 × 19,30 cm" }
-};
-function setSlideSize() {
-    var sel = document.getElementById("fmtSelect");
-    if (!sel) { showStatus("Format-Auswahl fehlt", "error"); return; }
-    var key = sel.value;
-    var fmt = SLIDE_FORMATS[key];
-    if (!fmt) { showStatus("Unbekanntes Format", "error"); return; }
-    PowerPoint.run(function (ctx) {
-        var ps = ctx.presentation.pageSetup;
-        ps.load(["slideWidth", "slideHeight"]);
-        return ctx.sync().then(function () {
-            ps.slideWidth = fmt.w;
-            return ctx.sync();
-        }).then(function () {
-            ps.slideHeight = fmt.h;
-            return ctx.sync();
-        }).then(function () {
-            showStatus("Format: " + key + " (" + fmt.label + ") ✓", "success");
-        });
-    }).catch(function (e) { showStatus("Fehler: " + e.message, "error"); });
-}
 function detectFormat() {
     PowerPoint.run(function (ctx) {
         var ps = ctx.presentation.pageSetup;
