@@ -346,10 +346,16 @@ function snap(mode) {
                Das PowerPoint-Raster beginnt nicht bei 0,0 sondern hat
                einen Rand. Der Offset ist der halbe Rest der Folienbreite/-höhe
                geteilt durch die Rastereinheit.
-               Berechnung komplett in Points um Rundungsfehler zu vermeiden. */
+               Berechnung komplett in Points um Rundungsfehler zu vermeiden.
+               Floating-Point-Modulo kann bei exakten Vielfachen (z.B. A4)
+               einen Rest nahe gPt statt 0 liefern → clampen. */
             var gPt = c2p(gridUnitCm);
-            var offsetX = (ps.slideWidth  % gPt) / 2;
-            var offsetY = (ps.slideHeight % gPt) / 2;
+            var remX = ps.slideWidth  % gPt;
+            var remY = ps.slideHeight % gPt;
+            if (remX > gPt * 0.95 || remX < gPt * 0.05) remX = 0;
+            if (remY > gPt * 0.95 || remY < gPt * 0.05) remY = 0;
+            var offsetX = remX / 2;
+            var offsetY = remY / 2;
 
             for (var i = 0; i < items.length; i++) {
                 var s = items[i];
@@ -417,8 +423,12 @@ function spacing(dir) {
 
             /* Raster-Offset berechnen (wie in snap) – komplett in Points */
             var gPt = c2p(gridUnitCm);
-            var offsetX = (ps.slideWidth  % gPt) / 2;
-            var offsetY = (ps.slideHeight % gPt) / 2;
+            var remX = ps.slideWidth  % gPt;
+            var remY = ps.slideHeight % gPt;
+            if (remX > gPt * 0.95 || remX < gPt * 0.05) remX = 0;
+            if (remY > gPt * 0.95 || remY < gPt * 0.05) remY = 0;
+            var offsetX = remX / 2;
+            var offsetY = remY / 2;
 
             /* Schritt 2: Lokale Kopie der Daten erstellen */
             var data = [];
