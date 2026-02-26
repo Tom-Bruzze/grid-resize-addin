@@ -84,7 +84,7 @@ function initUI() {
     /* ── Raster ── */
     bind("snapPos",     function () { snap("position"); });
     bind("snapSize",    function () { snap("size");     });
-    bind("snapAll",     function () { snap("both");     });
+    bind("snapAll",     function () { snapAndSpace();   });
     bind("showInfo",    function () { shapeInfo();      });
 
     /* ── Abstände ── */
@@ -534,6 +534,11 @@ function spacing(dir) {
                     row[0].left = snappedLeft;
                     row[0].shape.left = snappedLeft;
 
+                    /* Auch TOP ins Raster snappen */
+                    var snappedTop = offsetY + Math.round((row[0].top - offsetY) / gPt) * gPt;
+                    row[0].top = snappedTop;
+                    row[0].shape.top = snappedTop;
+
                     /* Alle weiteren werden repositioniert */
                     for (var i = 1; i < row.length; i++) {
                         var newLeft = row[i - 1].left + row[i - 1].width + sp;
@@ -560,6 +565,11 @@ function spacing(dir) {
                     var snappedTop = offsetY + Math.round((col[0].top - offsetY) / gPt) * gPt;
                     col[0].top = snappedTop;
                     col[0].shape.top = snappedTop;
+
+                    /* Auch LEFT ins Raster snappen */
+                    var snappedLeft = offsetX + Math.round((col[0].left - offsetX) / gPt) * gPt;
+                    col[0].left = snappedLeft;
+                    col[0].shape.left = snappedLeft;
 
                     /* Alle weiteren werden repositioniert */
                     for (var i = 1; i < col.length; i++) {
@@ -622,6 +632,118 @@ function groupByData(data, prop, tol) {
     }
     return groups;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   KOMBINIERTE FUNKTION: Snap + Spacing ("Alles")
+   1. Erst alle Objekte ins Raster snappen (Position + Größe)
+   2. Dann horizontale Abstände setzen
+   3. Dann vertikale Abstände setzen
+   ══════════════════════════════════════════════════════════════ */
+function snapAndSpace() {
+    if (!apiOk) { showStatus("PowerPointApi 1.10 nötig", "error"); return; }
+
+    PowerPoint.run(function (ctx) {
+        var sel = ctx.presentation.getSelectedShapes();
+        sel.load("items");
+        var ps = ctx.presentation.pageSetup;
+        ps.load(["slideWidth", "slideHeight"]);
+
+        return ctx.sync().then(function () {
+            var items = sel.items;
+            if (!items || items.length < 1) {
+                showStatus("Mind. 1 Objekt auswählen!", "error");
+                return;
+            }
+
+            for (var i = 0; i < items.length; i++) {
+                items[i].load(["left", "top", "width", "height"]);
+            }
+            return ctx.sync();
+        }).then(function () {
+            var items = sel.items;
+            if (!items || items.length < 1) return;
+
+            var gPt = c2p(gridUnitCm);
+            var _off = getGridOffsets(ps.slideWidth, ps.slideHeight);
+            var offsetX = _off.x;
+            var offsetY = _off.y;
+            var sp = gPt; /* 1 RE Abstand */
+            var tol = getTol();
+
+            /* ── Schritt 1: Alle Objekte ins Raster snappen (Position + Größe) ── */
+            for (var i = 0; i < items.length; i++) {
+                var s = items[i];
+                s.left   = offsetX + Math.round((s.left - offsetX) / gPt) * gPt;
+                s.top    = offsetY + Math.round((s.top  - offsetY) / gPt) * gPt;
+                s.width  = Math.max(gPt, Math.round(s.width  / gPt) * gPt);
+                s.height = Math.max(gPt, Math.round(s.height / gPt) * gPt);
+            }
+
+            return ctx.sync().then(function () {
+                /* Reload nach Snap, damit Spacing mit aktualisierten Werten arbeitet */
+                for (var i = 0; i < items.length; i++) {
+                    items[i].load(["left", "top", "width", "height"]);
+                }
+                return ctx.sync();
+            }).then(function () {
+                /* ── Schritt 2: Lokale Kopie erstellen ── */
+                var data = [];
+                for (var i = 0; i < items.length; i++) {
+                    data.push({
+                        idx:    i,
+                        shape:  items[i],
+                        left:   items[i].left,
+                        top:    items[i].top,
+                        width:  items[i].width,
+                        height: items[i].height
+                    });
+                }
+
+                var movedCount = 0;
+
+                /* ── Schritt 3: Horizontale Abstände (Zeilen) ── */
+                if (items.length >= 2) {
+                    var rows = groupByData(data, "top", tol);
+                    for (var r = 0; r < rows.length; r++) {
+                        var row = rows[r];
+                        if (row.length < 2) continue;
+                        row.sort(function (a, b) { return a.left - b.left; });
+
+                        for (var i = 1; i < row.length; i++) {
+                            var newLeft = row[i - 1].left + row[i - 1].width + sp;
+                            row[i].left = newLeft;
+                            row[i].shape.left = newLeft;
+                            movedCount++;
+                        }
+                    }
+
+                    /* ── Schritt 4: Vertikale Abstände (Spalten) ── */
+                    var cols = groupByData(data, "left", tol);
+                    for (var c = 0; c < cols.length; c++) {
+                        var col = cols[c];
+                        if (col.length < 2) continue;
+                        col.sort(function (a, b) { return a.top - b.top; });
+
+                        for (var i = 1; i < col.length; i++) {
+                            var newTop = col[i - 1].top + col[i - 1].height + sp;
+                            col[i].top = newTop;
+                            col[i].shape.top = newTop;
+                            movedCount++;
+                        }
+                    }
+                }
+
+                return ctx.sync().then(function () {
+                    showStatus("Alles → Raster ✓ [" + _off.name + "] · " +
+                        items.length + " Obj · " + movedCount + " Abstände", "success");
+                });
+            });
+        });
+    }).catch(function (e) {
+        showStatus("Alles-Fehler: " + e.message, "error");
+    });
+}
+
 
 /* ══════════════════════════════════════════════════════════════
    SHAPE INFO
@@ -800,7 +922,7 @@ function addGuides(ctx, masters) {
             s2.left = vRightPt; s2.top = 0; s2.width = 1; s2.height = sh;
             s2.name = GTAG + "_v_R6"; s2.fill.setSolidColor("FF0000"); s2.lineFormat.visible = false;
             hLines.forEach(function (l) {
-                var pt = Math.round(c2p(l.p * gridUnitCm));
+                var pt = Math.round(c2p(l.p * gridUnitCm) + off.y);
                 var s = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
                 s.left = 0; s.top = pt; s.width = sw; s.height = 1;
                 s.name = GTAG + "_" + l.t + "_" + l.p;
