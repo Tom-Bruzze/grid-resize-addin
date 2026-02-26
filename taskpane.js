@@ -806,20 +806,23 @@ function copyShadowText() {
    ═══════════════════════════════════════════════════════════════ */
 function copyVBA(pts) {
     var cmVal = (pts * 2.54 / 72).toFixed(4);
+    var q = String.fromCharCode(34);
     var lines = [
         "Sub SetGrid_" + Math.round(pts) + "pt()",
         "    ' Setzt PowerPoint-Raster auf exakt " + pts + " pt (" + cmVal + " cm)",
         "    ' Mac- und Windows-kompatibel",
         "    On Error Resume Next",
-        "    Dim gsp As Single",
-        "    gsp = " + pts + "  ' Points",
-        "    ActiveWindow.View.GridSpacing = gsp",
+        "    With ActivePresentation",
+        "        .GridDistance = " + pts,
+        "        .SnapToGrid = msoTrue",
+        "    End With",
+        "    Application.DisplayGridLines = msoTrue",
         "    If Err.Number <> 0 Then",
         "        Err.Clear",
-        "        MsgBox \"GridSpacing konnte nicht gesetzt werden.\", vbExclamation",
+        "        MsgBox " + q + "GridDistance konnte nicht gesetzt werden." + q + ", vbExclamation",
         "        Exit Sub",
         "    End If",
-        "    MsgBox \"Raster gesetzt auf \" & gsp & \" pt (\" & Format(gsp * 2.54 / 72, \"0.0000\") & \" cm)\", vbInformation",
+        "    MsgBox " + q + "Raster gesetzt auf " + pts + " pt (" + cmVal + " cm)" + q + ", vbInformation",
         "End Sub"
     ];
     var txt = lines.join(String.fromCharCode(13, 10));
