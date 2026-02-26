@@ -316,4 +316,4 @@ End Sub
 
 ---
 
-*DROEGE GROUP – Grid Resize Tool v12 – Erstellt: Februar 2026*
+*DROEGE GROUP – Grid Resize Tool v15 – Erstellt: Februar 2026*
