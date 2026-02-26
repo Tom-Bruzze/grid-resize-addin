@@ -732,26 +732,40 @@ function toggleGuides() {
 }
 
 function addGuides(ctx, masters) {
-    var lines = [
-        { t: "v", p: 8 }, { t: "v", p: 126 },
+    var hLines = [
         { t: "h", p: 5 }, { t: "h", p: 9 }, { t: "h", p: 15 }, { t: "h", p: 17 }, { t: "h", p: 86 }
     ];
     var ps = ctx.presentation.pageSetup;
     ps.load(["slideWidth", "slideHeight"]);
     return ctx.sync().then(function () {
         var sw = ps.slideWidth, sh = ps.slideHeight;
+        var off = getGridOffsets(sw, sh);
+        var offXcm = off.name !== "Unbekannt" ? p2c(off.x) : 0;
+        var vLeftCm = offXcm + 7 * gridUnitCm;
+        var slideWcm = p2c(sw);
+        var vRightCm = slideWcm - offXcm - 6 * gridUnitCm;
+        var vLeftPt = c2p(vLeftCm);
+        var vRightPt = c2p(vRightCm);
+        var vLeftRE = Math.round(vLeftCm / gridUnitCm);
+        var vRightRE = Math.round(vRightCm / gridUnitCm);
         masters.forEach(function (master) {
-            lines.forEach(function (l) {
+            var s1 = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
+            s1.left = vLeftPt; s1.top = 0; s1.width = 1; s1.height = sh;
+            s1.name = GTAG + "_v_L7"; s1.fill.setSolidColor("FF0000"); s1.lineFormat.visible = false;
+            var s2 = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
+            s2.left = vRightPt; s2.top = 0; s2.width = 1; s2.height = sh;
+            s2.name = GTAG + "_v_R6"; s2.fill.setSolidColor("FF0000"); s2.lineFormat.visible = false;
+            hLines.forEach(function (l) {
                 var pt = Math.round(c2p(l.p * gridUnitCm));
                 var s = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
-                if (l.t === "v") { s.left = pt; s.top = 0; s.width = 1; s.height = sh; }
-                else             { s.left = 0; s.top = pt; s.width = sw; s.height = 1; }
+                s.left = 0; s.top = pt; s.width = sw; s.height = 1;
                 s.name = GTAG + "_" + l.t + "_" + l.p;
-                s.fill.setSolidColor("FF0000");
-                s.lineFormat.visible = false;
+                s.fill.setSolidColor("FF0000"); s.lineFormat.visible = false;
             });
         });
-        return ctx.sync().then(function () { showStatus("Hilfslinien ein ✓", "success"); });
+        return ctx.sync().then(function () {
+            showStatus("Hilfslinien ein ✓ (" + off.name + " | V: " + vLeftRE + ", " + vRightRE + " RE)", "success");
+        });
     });
 }
 
