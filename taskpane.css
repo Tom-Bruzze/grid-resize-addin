@@ -91,3 +91,5 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 ::-webkit-scrollbar-track{background:#1a1a2e}
 ::-webkit-scrollbar-thumb{background:#2a2a4a;border-radius:3px}
 ::-webkit-scrollbar-thumb:hover{background:#e94560}
+
+.vba-info { font-size:10px; color:#888; margin:2px 0 6px 0; line-height:1.3; }

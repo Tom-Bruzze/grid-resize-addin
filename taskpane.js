@@ -98,6 +98,9 @@ function initUI() {
     bind("setSlide",     function () { setSlideSize();   });
     bind("toggleGuides", function () { toggleGuides();   });
     bind("copyShadow",   function () { copyShadowText(); });
+    bind("detectFmt",    function () { detectFormat();   });
+    bind("copyVBA6",      function () { copyVBA(6); });
+    bind("copyVBAcustom", function () { var v=parseFloat(document.getElementById("vbaGridPt").value)||6; copyVBA(v); });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -710,29 +713,42 @@ function toggleGuides() {
 }
 
 function addGuides(ctx, masters) {
-    var lines = [
-        { t: "v", p: 8 }, { t: "v", p: 126 },
+    var hLines = [
         { t: "h", p: 5 }, { t: "h", p: 9 }, { t: "h", p: 15 }, { t: "h", p: 17 }, { t: "h", p: 86 }
     ];
     var ps = ctx.presentation.pageSetup;
     ps.load(["slideWidth", "slideHeight"]);
     return ctx.sync().then(function () {
         var sw = ps.slideWidth, sh = ps.slideHeight;
+        var off = getGridOffsets(sw, sh);
+        var offXcm = off.name !== "Unbekannt" ? p2c(off.x) : 0;
+        var vLeftCm = offXcm + 7 * gridUnitCm;
+        var slideWcm = p2c(sw);
+        var vRightCm = slideWcm - offXcm - 6 * gridUnitCm;
+        var vLeftPt = c2p(vLeftCm);
+        var vRightPt = c2p(vRightCm);
+        var vLeftRE = Math.round(vLeftCm / gridUnitCm);
+        var vRightRE = Math.round(vRightCm / gridUnitCm);
         masters.forEach(function (master) {
-            lines.forEach(function (l) {
+            var s1 = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
+            s1.left = vLeftPt; s1.top = 0; s1.width = 1; s1.height = sh;
+            s1.name = GTAG + "_v_L7"; s1.fill.setSolidColor("FF0000"); s1.lineFormat.visible = false;
+            var s2 = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
+            s2.left = vRightPt; s2.top = 0; s2.width = 1; s2.height = sh;
+            s2.name = GTAG + "_v_R6"; s2.fill.setSolidColor("FF0000"); s2.lineFormat.visible = false;
+            hLines.forEach(function (l) {
                 var pt = Math.round(c2p(l.p * gridUnitCm));
                 var s = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
-                if (l.t === "v") { s.left = pt; s.top = 0; s.width = 1; s.height = sh; }
-                else             { s.left = 0; s.top = pt; s.width = sw; s.height = 1; }
+                s.left = 0; s.top = pt; s.width = sw; s.height = 1;
                 s.name = GTAG + "_" + l.t + "_" + l.p;
-                s.fill.setSolidColor("FF0000");
-                s.lineFormat.visible = false;
+                s.fill.setSolidColor("FF0000"); s.lineFormat.visible = false;
             });
         });
-        return ctx.sync().then(function () { showStatus("Hilfslinien ein ✓", "success"); });
+        return ctx.sync().then(function () {
+            showStatus("Hilfslinien ein \u2713 (" + off.name + " | V: " + vLeftRE + ", " + vRightRE + " RE)", "success");
+        });
     });
 }
-
 function rmGuides(ctx, masters) {
     var ps = [];
     masters.forEach(function (master) {
@@ -761,4 +777,55 @@ function copyShadowText() {
             showStatus("Schatten-Werte kopiert ✓", "success");
         }).catch(function () { showStatus("Kopieren fehlgeschlagen", "error"); });
     } else { showStatus("Zwischenablage nicht verfügbar", "error"); }
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════════
+   Papierformat erkennen
+   ═══════════════════════════════════════════════════════════════ */
+function detectFormat() {
+    PowerPoint.run(function (ctx) {
+        var ps = ctx.presentation.pageSetup;
+        ps.load(["slideWidth", "slideHeight"]);
+        return ctx.sync().then(function () {
+            var off = getGridOffsets(ps.slideWidth, ps.slideHeight);
+            showStatus("Erkannt: " + off.name + " | " +
+                (ps.slideWidth/28.3465).toFixed(2) + " \u00d7 " +
+                (ps.slideHeight/28.3465).toFixed(2) + " cm (" +
+                ps.slideWidth.toFixed(1) + " \u00d7 " + ps.slideHeight.toFixed(1) + " pt)", "success");
+        });
+    }).catch(function (e) { showStatus("Fehler: " + e.message, "error"); });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VBA Grid-Raster kopieren (Mac-kompatibel)
+   ═══════════════════════════════════════════════════════════════ */
+function copyVBA(pts) {
+    var cmVal = (pts * 2.54 / 72).toFixed(4);
+    var q = String.fromCharCode(34);
+    var lines = [
+        "Sub SetGrid_" + Math.round(pts) + "pt()",
+        "    ' Setzt PowerPoint-Raster auf exakt " + pts + " pt (" + cmVal + " cm)",
+        "    ' Mac- und Windows-kompatibel",
+        "    On Error Resume Next",
+        "    With ActivePresentation",
+        "        .GridDistance = " + pts,
+        "        .SnapToGrid = msoTrue",
+        "    End With",
+        "    Application.DisplayGridLines = msoTrue",
+        "    If Err.Number <> 0 Then",
+        "        Err.Clear",
+        "        MsgBox " + q + "GridDistance konnte nicht gesetzt werden." + q + ", vbExclamation",
+        "        Exit Sub",
+        "    End If",
+        "    MsgBox " + q + "Raster gesetzt auf " + pts + " pt (" + cmVal + " cm)" + q + ", vbInformation",
+        "End Sub"
+    ];
+    var txt = lines.join(String.fromCharCode(13, 10));
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(function () {
+            showStatus("VBA-Macro kopiert (" + pts + " pt = " + cmVal + " cm) \u2713", "success");
+        }).catch(function () { showStatus("Kopieren fehlgeschlagen", "error"); });
+    } else { showStatus("Zwischenablage nicht verf\u00fcgbar", "error"); }
 }
