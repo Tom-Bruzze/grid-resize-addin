@@ -95,7 +95,6 @@ function initUI() {
     bind("createTable", function () { createGridTable(); });
 
     /* ── Extras ── */
-    bind("setSlide",     function () { setSlideSize();   });
     bind("toggleGuides", function () { toggleGuides();   });
     bind("copyShadow",   function () { copyShadowText(); });
     bind("detectFmt",    function () { detectFormat();   });
@@ -137,6 +136,29 @@ function rnd(v)  { return Math.round(v / gridUnitCm) * gridUnitCm; }
 function getTol() {
     var t = c2p(gridUnitCm) * 0.5;
     return t < 5 ? 5 : t;
+}
+
+
+/* ── Feste Raster-Offsets (0,21 cm) – gemessen in PowerPoint ── */
+var GRID_OFFSETS = [
+    { name: "16:9",      w: 720.0,   h: 405.0,   ox: 0.10, oy: 0.00 },
+    { name: "4:3",       w: 720.0,   h: 540.0,   ox: 0.10, oy: 0.069 },
+    { name: "16:10",     w: 720.0,   h: 450.0,   ox: 0.10, oy: 0.17 },
+    { name: "A4 quer",   w: 780.0,   h: 540.0,   ox: 0.11, oy: 0.07 },
+    { name: "Breitbild", w: 960.0,   h: 540.0,   ox: 0.13, oy: 0.07 }
+];
+function getGridOffsets(slideW, slideH) {
+    var bestIdx = -1, bestDiff = 999;
+    for (var i = 0; i < GRID_OFFSETS.length; i++) {
+        var f = GRID_OFFSETS[i];
+        var d = Math.abs(slideW - f.w) + Math.abs(slideH - f.h);
+        if (d < bestDiff) { bestDiff = d; bestIdx = i; }
+    }
+    if (bestIdx >= 0 && bestDiff < 10) {
+        var f = GRID_OFFSETS[bestIdx];
+        return { x: c2p(f.ox), y: c2p(f.oy), name: f.name };
+    }
+    return { x: 0, y: 0, name: "Unbekannt" };
 }
 
 function withShapes(min, cb) {
@@ -672,21 +694,6 @@ function buildTbl(ctx, slide, cols, rows, cwRE, chRE) {
 /* ══════════════════════════════════════════════════════════════
    PAPIERFORMAT – 27,728 × 19,297 cm
    ══════════════════════════════════════════════════════════════ */
-function setSlideSize() {
-    PowerPoint.run(function (ctx) {
-        var ps = ctx.presentation.pageSetup;
-        ps.load(["slideWidth", "slideHeight"]);
-        return ctx.sync().then(function () {
-            ps.slideWidth = 786;
-            return ctx.sync();
-        }).then(function () {
-            ps.slideHeight = 547;
-            return ctx.sync();
-        }).then(function () {
-            showStatus("Format: 27,728 × 19,297 cm ✓", "success");
-        });
-    }).catch(function (e) { showStatus("Fehler: " + e.message, "error"); });
-}
 
 /* ══════════════════════════════════════════════════════════════
    HILFSLINIEN (Master Toggle)
