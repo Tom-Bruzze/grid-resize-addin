@@ -95,3 +95,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#1a1a2e;color:#e0e0e
 /* ── Format-Dropdown ── */
 .fmt-select { width:100%; padding:6px 8px; margin-bottom:6px; border:1px solid #ccc; border-radius:4px; font-size:12px; background:#fff; color:#333; cursor:pointer; }
 .fmt-select:focus { border-color:#1A3A5C; outline:none; }
+
+/* VBA Info */
+.vba-info{font-size:10px;color:#888;margin-bottom:6px;line-height:1.3;}

@@ -787,6 +787,56 @@ function rmGuides(ctx, masters) {
     });
 }
 
+
+
+/* ═══════════════════════════════════════════════════════════════
+   VBA Grid-Raster (Mac-kompatibel)
+   ═══════════════════════════════════════════════════════════════ */
+function getVBACode(pts) {
+    var cmVal = (pts * 2.54 / 72).toFixed(4);
+    return "Sub SetGrid_" + pts + "pt()\n" +
+           "    ' Setzt PowerPoint-Raster auf exakt " + pts + " pt (" + cmVal + " cm)\n" +
+           "    ' Mac- und Windows-kompatibel\n" +
+           "    On Error Resume Next\n" +
+           "    Dim gsp As Single\n" +
+           "    gsp = " + pts + "  ' Points\n" +
+           "    ActiveWindow.View.GridSpacing = gsp\n" +
+           "    If Err.Number <> 0 Then\n" +
+           "        Err.Clear\n" +
+           "        ' Fallback fuer aeltere Versionen\n" +
+           "        CommandBars.ExecuteMso \"GridSettings\"\n" +
+           "    End If\n" +
+           "    MsgBox \"Raster gesetzt auf \" & gsp & \" pt (\" & Format(gsp * 2.54 / 72, \"0.0000\") & \" cm)\", vbInformation\n" +
+           "End Sub";
+}
+
+function copyVBA(pts) {
+    // Build clean VBA string
+    var cmVal = (pts * 2.54 / 72).toFixed(4);
+    var lines = [
+        "Sub SetGrid_" + Math.round(pts) + "pt()",
+        "    ' Setzt PowerPoint-Raster auf exakt " + pts + " pt (" + cmVal + " cm)",
+        "    ' Mac- und Windows-kompatibel",
+        "    On Error Resume Next",
+        "    Dim gsp As Single",
+        "    gsp = " + pts + "  ' Points",
+        "    ActiveWindow.View.GridSpacing = gsp",
+        "    If Err.Number <> 0 Then",
+        "        Err.Clear",
+        "        MsgBox "GridSpacing konnte nicht gesetzt werden. Bitte manuell setzen.", vbExclamation",
+        "        Exit Sub",
+        "    End If",
+        "    MsgBox "Raster gesetzt auf " & gsp & " pt (" & Format(gsp * 2.54 / 72, "0.0000") & " cm)", vbInformation",
+        "End Sub"
+    ];
+    var txt = lines.join(String.fromCharCode(13, 10));
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(function () {
+            showStatus("VBA-Macro kopiert (" + pts + " pt = " + cmVal + " cm) ✓", "success");
+        }).catch(function () { showStatus("Kopieren fehlgeschlagen", "error"); });
+    } else { showStatus("Zwischenablage nicht verfügbar", "error"); }
+}
+
 /* ══════════════════════════════════════════════════════════════
    SCHATTEN-WERTE KOPIEREN
    ══════════════════════════════════════════════════════════════ */

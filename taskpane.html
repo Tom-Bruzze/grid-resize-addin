@@ -15,7 +15,7 @@
         <span class="logo">&#9638;</span>
         <div>
             <div class="title"><b>Grid Resize by Droege Group</b></div>
-            <div class="build">Build 26.02.2026 · v8</div>
+            <div class="build">Build 26.02.2026 · v9</div>
         </div>
     </div>
 
@@ -110,6 +110,21 @@
             <div class="sec-title">Hilfslinien (Master)</div>
             <button id="toggleGuides" class="btn-full">Ein-/Ausblenden</button>
             <div class="guide-info">V: <b>7 RE</b> (links), <b>-6 RE</b> (rechts) &middot; H: <b>5</b>, <b>9</b>, <b>15</b>, <b>17</b>, <b>86 RE</b></div>
+        </div>
+
+
+        <!-- VBA Grid-Raster -->
+        <div class="sec">
+            <div class="sec-title">PowerPoint-Raster setzen (VBA)</div>
+            <div class="vba-info">Setzt das PP-Raster exakt auf 6 pt (0,2117 cm). Kopiert ein Mac-kompatibles VBA-Macro in die Zwischenablage &ndash; im VBA-Editor (Alt+F11) einf&uuml;gen &amp; ausf&uuml;hren.</div>
+            <div class="row">
+                <button id="copyVBA6" class="btn-full">&#128203; VBA: Raster 6 pt kopieren</button>
+            </div>
+            <div class="row" style="margin-top:4px;">
+                <input id="vbaGridPt" class="re-in" type="number" step="0.1" min="0.1" value="6" style="width:50px;">
+                <span class="lbl">pt</span>
+                <button id="copyVBAcustom" class="sq blu" style="margin-left:6px;">Kopieren</button>
+            </div>
         </div>
 
         <!-- Schatten -->
