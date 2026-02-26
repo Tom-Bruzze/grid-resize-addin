@@ -138,6 +138,64 @@ function getTol() {
     return t < 5 ? 5 : t;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   FORMAT-ERKENNUNG & GRID-OFFSETS
+   Lookup-Tabelle mit exakten Werten (Offsets in cm).
+   ══════════════════════════════════════════════════════════════ */
+var FORMAT_TABLE = [
+    { name: "16:9",       w: 720.0, h: 405.0, offXcm: 0.00, offYcm: 0.16 },
+    { name: "4:3",        w: 720.0, h: 540.0, offXcm: 0.00, offYcm: 0.00 },
+    { name: "16:10",      w: 720.0, h: 450.0, offXcm: 0.00, offYcm: 0.00 },
+    { name: "A4 quer",    w: 780.0, h: 540.0, offXcm: 0.00, offYcm: 0.00 },
+    { name: "Breitbild",  w: 960.0, h: 540.0, offXcm: 0.00, offYcm: 0.00 }
+];
+
+function getGridOffsets(slideWidthPt, slideHeightPt) {
+    /* 1) Exakter Match mit Toleranz ±6 pt */
+    var tol = 6;
+    for (var i = 0; i < FORMAT_TABLE.length; i++) {
+        var f = FORMAT_TABLE[i];
+        if (Math.abs(slideWidthPt - f.w) <= tol && Math.abs(slideHeightPt - f.h) <= tol) {
+            return { name: f.name, x: c2p(f.offXcm), y: c2p(f.offYcm) };
+        }
+    }
+
+    /* 2) Aspect-Ratio-Match (±0.5%) */
+    var ratio = slideWidthPt / slideHeightPt;
+    var bestRatio = null, bestRatioDiff = Infinity;
+    for (var i = 0; i < FORMAT_TABLE.length; i++) {
+        var f = FORMAT_TABLE[i];
+        var fRatio = f.w / f.h;
+        var diff = Math.abs(ratio - fRatio) / fRatio;
+        if (diff < 0.005 && diff < bestRatioDiff) {
+            bestRatioDiff = diff;
+            bestRatio = f;
+        }
+    }
+    if (bestRatio) {
+        return { name: bestRatio.name + " (Ratio)", x: c2p(bestRatio.offXcm), y: c2p(bestRatio.offYcm) };
+    }
+
+    /* 3) Nearest-Neighbor Fallback */
+    var bestNN = null, bestNNdist = Infinity;
+    for (var i = 0; i < FORMAT_TABLE.length; i++) {
+        var f = FORMAT_TABLE[i];
+        var dist = Math.abs(slideWidthPt - f.w) + Math.abs(slideHeightPt - f.h);
+        if (dist < bestNNdist) {
+            bestNNdist = dist;
+            bestNN = f;
+        }
+    }
+    if (bestNN && bestNNdist < 100) {
+        return { name: bestNN.name + " (NN)", x: c2p(bestNN.offXcm), y: c2p(bestNN.offYcm) };
+    }
+
+    /* 4) Generischer Fallback: Modulo-basiert */
+    var gPt = c2p(gridUnitCm);
+    return { name: "Unbekannt", x: (slideWidthPt % gPt) / 2, y: (slideHeightPt % gPt) / 2 };
+}
+
+
 
 /* ── Feste Raster-Offsets (0,21 cm) – gemessen in PowerPoint ── */
 var GRID_OFFSETS = [
@@ -367,14 +425,11 @@ function snap(mode) {
             var items = sel.items;
             if (!items || items.length < 1) return;
 
-            /* ── Raster-Offset berechnen ──
-               Das PowerPoint-Raster beginnt nicht bei 0,0 sondern hat
-               einen Rand. Der Offset ist der halbe Rest der Folienbreite/-höhe
-               geteilt durch die Rastereinheit.
-               Berechnung komplett in Points um Rundungsfehler zu vermeiden. */
+            /* ── Raster-Offset aus Format-Tabelle ── */
             var gPt = c2p(gridUnitCm);
-            var offsetX = (ps.slideWidth  % gPt) / 2;
-            var offsetY = (ps.slideHeight % gPt) / 2;
+            var _off = getGridOffsets(ps.slideWidth, ps.slideHeight);
+            var offsetX = _off.x;
+            var offsetY = _off.y;
 
             for (var i = 0; i < items.length; i++) {
                 var s = items[i];
@@ -440,10 +495,11 @@ function spacing(dir) {
             var sp = c2p(gridUnitCm);
             var tol = getTol();
 
-            /* Raster-Offset berechnen (wie in snap) – komplett in Points */
+            /* Raster-Offset aus Format-Tabelle (wie in snap) */
             var gPt = c2p(gridUnitCm);
-            var offsetX = (ps.slideWidth  % gPt) / 2;
-            var offsetY = (ps.slideHeight % gPt) / 2;
+            var _off = getGridOffsets(ps.slideWidth, ps.slideHeight);
+            var offsetX = _off.x;
+            var offsetY = _off.y;
 
             /* Schritt 2: Lokale Kopie der Daten erstellen */
             var data = [];
