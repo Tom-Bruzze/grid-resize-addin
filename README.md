@@ -1,4 +1,4 @@
-# DROEGE Grid Resize Tool v12
+# DROEGE Grid Resize Tool v15 26/02/2026 - 21:00
 ## PowerPoint Office Add-in – Komplette Dokumentation
 
 ---
