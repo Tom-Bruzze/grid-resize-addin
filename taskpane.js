@@ -138,16 +138,17 @@ function getTol() {
     return t < 5 ? 5 : t;
 }
 
+
 /* ══════════════════════════════════════════════════════════════
-   FORMAT-ERKENNUNG & GRID-OFFSETS
-   Lookup-Tabelle mit exakten Werten (Offsets in cm).
+   FORMAT-ERKENNUNG & GRID-OFFSETS  (v15 – korrigiert)
+   Offsets in cm – geprüft und vom Benutzer bestätigt.
    ══════════════════════════════════════════════════════════════ */
 var FORMAT_TABLE = [
-    { name: "16:9",       w: 720.0, h: 405.0, offXcm: 0.00, offYcm: 0.16 },
-    { name: "4:3",        w: 720.0, h: 540.0, offXcm: 0.00, offYcm: 0.00 },
-    { name: "16:10",      w: 720.0, h: 450.0, offXcm: 0.00, offYcm: 0.00 },
-    { name: "A4 quer",    w: 780.0, h: 540.0, offXcm: 0.00, offYcm: 0.00 },
-    { name: "Breitbild",  w: 960.0, h: 540.0, offXcm: 0.00, offYcm: 0.00 }
+    { name: "16:9",      w: 720.0, h: 405.0, offXcm: 0.00, offYcm: 0.16 },
+    { name: "4:3",       w: 720.0, h: 540.0, offXcm: 0.00, offYcm: 0.00 },
+    { name: "16:10",     w: 720.0, h: 450.0, offXcm: 0.00, offYcm: 0.00 },
+    { name: "A4 quer",   w: 780.0, h: 540.0, offXcm: 0.00, offYcm: 0.00 },
+    { name: "Breitbild", w: 960.0, h: 540.0, offXcm: 0.00, offYcm: 0.00 }
 ];
 
 function getGridOffsets(slideWidthPt, slideHeightPt) {
@@ -160,7 +161,7 @@ function getGridOffsets(slideWidthPt, slideHeightPt) {
         }
     }
 
-    /* 2) Aspect-Ratio-Match (±0.5%) */
+    /* 2) Aspect-Ratio-Match (±0.5 %) */
     var ratio = slideWidthPt / slideHeightPt;
     var bestRatio = null, bestRatioDiff = Infinity;
     for (var i = 0; i < FORMAT_TABLE.length; i++) {
@@ -180,44 +181,17 @@ function getGridOffsets(slideWidthPt, slideHeightPt) {
     var bestNN = null, bestNNdist = Infinity;
     for (var i = 0; i < FORMAT_TABLE.length; i++) {
         var f = FORMAT_TABLE[i];
-        var dist = Math.abs(slideWidthPt - f.w) + Math.abs(slideHeightPt - f.h);
-        if (dist < bestNNdist) {
-            bestNNdist = dist;
-            bestNN = f;
-        }
+        var d = Math.abs(slideWidthPt - f.w) + Math.abs(slideHeightPt - f.h);
+        if (d < bestNNdist) { bestNNdist = d; bestNN = f; }
     }
-    if (bestNN && bestNNdist < 100) {
+    if (bestNN && bestNNdist < 50) {
         return { name: bestNN.name + " (NN)", x: c2p(bestNN.offXcm), y: c2p(bestNN.offYcm) };
     }
 
-    /* 4) Generischer Fallback: Modulo-basiert */
-    var gPt = c2p(gridUnitCm);
-    return { name: "Unbekannt", x: (slideWidthPt % gPt) / 2, y: (slideHeightPt % gPt) / 2 };
+    /* 4) Unbekannt – kein Offset */
+    return { name: "Unbekannt", x: 0, y: 0 };
 }
 
-
-
-/* ── Feste Raster-Offsets (0,21 cm) – gemessen in PowerPoint ── */
-var GRID_OFFSETS = [
-    { name: "16:9",      w: 720.0,   h: 405.0,   ox: 0.10, oy: 0.00 },
-    { name: "4:3",       w: 720.0,   h: 540.0,   ox: 0.10, oy: 0.069 },
-    { name: "16:10",     w: 720.0,   h: 450.0,   ox: 0.10, oy: 0.17 },
-    { name: "A4 quer",   w: 780.0,   h: 540.0,   ox: 0.11, oy: 0.07 },
-    { name: "Breitbild", w: 960.0,   h: 540.0,   ox: 0.13, oy: 0.07 }
-];
-function getGridOffsets(slideW, slideH) {
-    var bestIdx = -1, bestDiff = 999;
-    for (var i = 0; i < GRID_OFFSETS.length; i++) {
-        var f = GRID_OFFSETS[i];
-        var d = Math.abs(slideW - f.w) + Math.abs(slideH - f.h);
-        if (d < bestDiff) { bestDiff = d; bestIdx = i; }
-    }
-    if (bestIdx >= 0 && bestDiff < 10) {
-        var f = GRID_OFFSETS[bestIdx];
-        return { x: c2p(f.ox), y: c2p(f.oy), name: f.name };
-    }
-    return { x: 0, y: 0, name: "Unbekannt" };
-}
 
 function withShapes(min, cb) {
     if (!apiOk) { showStatus("PowerPointApi 1.10 nötig", "error"); return; }
