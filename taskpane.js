@@ -142,11 +142,11 @@ function getTol() {
    Funktioniert korrekt für alle Formate (16:9, 4:3, A4, A3, Letter, etc.). */
 /* ── Feste Raster-Offsets (0,21 cm) – gemessen in PowerPoint ── */
 var GRID_OFFSETS = [
-    { name: "16:9",      w: 960.0,   h: 540.0,   ox: 0.10, oy: 0.00 },
-    { name: "4:3",       w: 914.4,   h: 685.8,   ox: 0.10, oy: 0.069 },
+    { name: "16:9",      w: 720.0,   h: 405.0,   ox: 0.10, oy: 0.00 },
+    { name: "4:3",       w: 720.0,   h: 540.0,   ox: 0.10, oy: 0.069 },
     { name: "16:10",     w: 720.0,   h: 450.0,   ox: 0.10, oy: 0.17 },
-    { name: "A4 quer",   w: 841.89,  h: 595.28,  ox: 0.11, oy: 0.07 },
-    { name: "Breitbild", w: 786.0,   h: 547.0,   ox: 0.13, oy: 0.07 }
+    { name: "A4 quer",   w: 780.0,   h: 540.0,   ox: 0.11, oy: 0.07 },
+    { name: "Breitbild", w: 960.0,   h: 540.0,   ox: 0.13, oy: 0.07 }
 ];
 function getGridOffsets(slideW, slideH) {
     var bestIdx = -1, bestDiff = 999;
