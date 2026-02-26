@@ -15,18 +15,18 @@
         <span class="logo">&#9638;</span>
         <div>
             <div class="title"><b>Grid Resize by Droege Group</b></div>
-            <div class="build">Build 26.02.2026 · v9</div>
+            <div class="build">Build 26.02.2026 – v10</div>
         </div>
     </div>
 
     <!-- Rastereinheit -->
     <div class="sec re-sec">
         <span class="lbl">RE</span>
-        <button class="pre" data-value="0.21">0,21</button>
-        <button class="pre active" data-value="0.42">0,42</button>
-        <button class="pre" data-value="0.63">0,63</button>
-        <button class="pre" data-value="2.10">2,10</button>
-        <input id="gridUnit" class="re-in" type="number" step="0.01" min="0.01" value="0.21"> <span class="lbl">cm</span>
+        <button class="pre active" data-value="0.2117">0,2117</button>
+        <button class="pre" data-value="0.4233">0,4233</button>
+        <button class="pre" data-value="0.6350">0,6350</button>
+        <button class="pre" data-value="2.1167">2,1167</button>
+        <input id="gridUnit" class="re-in" type="number" step="0.0001" min="0.01" value="0.2117"> <span class="lbl">cm</span>
     </div>
 
     <!-- Status -->
@@ -102,29 +102,15 @@
         <!-- Papierformat -->
         <div class="sec">
             <div class="sec-title">Papierformat</div>
-            <button id="detectFmt" class="btn-full">&#128270; Format erkennen</button>
+            <div class="fmt-info">27,728 &times; 19,297 cm</div>
+            <button id="setSlide" class="btn-full">&#9635; Anwenden</button>
         </div>
 
         <!-- Hilfslinien -->
         <div class="sec">
             <div class="sec-title">Hilfslinien (Master)</div>
             <button id="toggleGuides" class="btn-full">Ein-/Ausblenden</button>
-            <div class="guide-info">V: <b>7 RE</b> (links), <b>-6 RE</b> (rechts) &middot; H: <b>5</b>, <b>9</b>, <b>15</b>, <b>17</b>, <b>86 RE</b></div>
-        </div>
-
-
-        <!-- VBA Grid-Raster -->
-        <div class="sec">
-            <div class="sec-title">PowerPoint-Raster setzen (VBA)</div>
-            <div class="vba-info">Kopiert ein Mac-kompatibles VBA-Macro in die Zwischenablage &ndash; im VBA-Editor (Alt+F11) einf&uuml;gen &amp; ausf&uuml;hren.</div>
-            <div class="row">
-                <button id="copyVBA6" class="btn-full">&#128203; VBA: Raster 6 pt kopieren</button>
-            </div>
-            <div class="row" style="margin-top:4px;">
-                <input id="vbaGridPt" class="re-in" type="number" step="0.1" min="0.1" value="6" style="width:50px;">
-                <span class="lbl">pt</span>
-                <button id="copyVBAcustom" class="sq blu" style="margin-left:6px;">Kopieren</button>
-            </div>
+            <div class="guide-info">V: <b>8</b>, <b>126 RE</b> &middot; H: <b>5</b>, <b>9</b>, <b>15</b>, <b>17</b>, <b>86 RE</b></div>
         </div>
 
         <!-- Schatten -->

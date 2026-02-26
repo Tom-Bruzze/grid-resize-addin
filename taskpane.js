@@ -6,7 +6,7 @@
 
 var CM = 28.3465;
 var MIN = 0.1;
-var gridUnitCm = 0.21;
+var gridUnitCm = 0.2117;  /* 6 pt = 6/28.3465 cm */
 var apiOk = false;
 var GTAG = "DROEGE_GUIDELINE";
 
@@ -95,11 +95,9 @@ function initUI() {
     bind("createTable", function () { createGridTable(); });
 
     /* ── Extras ── */
-    bind("detectFmt",    function () { detectFormat();   });
+    bind("setSlide",     function () { setSlideSize();   });
     bind("toggleGuides", function () { toggleGuides();   });
     bind("copyShadow",   function () { copyShadowText(); });
-    bind("copyVBA6",      function () { copyVBA(6); });
-    bind("copyVBAcustom", function () { var v=parseFloat(document.getElementById("vbaGridPt").value)||6; copyVBA(v); });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -136,32 +134,6 @@ function rnd(v)  { return Math.round(v / gridUnitCm) * gridUnitCm; }
 function getTol() {
     var t = c2p(gridUnitCm) * 0.5;
     return t < 5 ? 5 : t;
-}
-
-/* Berechnet den Raster-Offset (halber Rand) für eine Foliendimension.
-   Robuster Algorithmus: Statt fehleranfälligem Floating-Point-Modulo
-   wird die Anzahl passender Rastereinheiten gerundet.
-   Funktioniert korrekt für alle Formate (16:9, 4:3, A4, A3, Letter, etc.). */
-/* ── Feste Raster-Offsets (0,21 cm) – gemessen in PowerPoint ── */
-var GRID_OFFSETS = [
-    { name: "16:9",      w: 720.0,   h: 405.0,   ox: 0.10, oy: 0.00 },
-    { name: "4:3",       w: 720.0,   h: 540.0,   ox: 0.10, oy: 0.069 },
-    { name: "16:10",     w: 720.0,   h: 450.0,   ox: 0.10, oy: 0.17 },
-    { name: "A4 quer",   w: 780.0,   h: 540.0,   ox: 0.11, oy: 0.07 },
-    { name: "Breitbild", w: 960.0,   h: 540.0,   ox: 0.13, oy: 0.07 }
-];
-function getGridOffsets(slideW, slideH) {
-    var bestIdx = -1, bestDiff = 999;
-    for (var i = 0; i < GRID_OFFSETS.length; i++) {
-        var f = GRID_OFFSETS[i];
-        var d = Math.abs(slideW - f.w) + Math.abs(slideH - f.h);
-        if (d < bestDiff) { bestDiff = d; bestIdx = i; }
-    }
-    if (bestIdx >= 0 && bestDiff < 10) {
-        var f = GRID_OFFSETS[bestIdx];
-        return { x: c2p(f.ox), y: c2p(f.oy), name: f.name };
-    }
-    return { x: 0, y: 0, name: "Unbekannt" };
 }
 
 function withShapes(min, cb) {
@@ -370,11 +342,14 @@ function snap(mode) {
             var items = sel.items;
             if (!items || items.length < 1) return;
 
-            /* ── Raster-Offset (Lookup) ── */
+            /* ── Raster-Offset berechnen ──
+               Das PowerPoint-Raster beginnt nicht bei 0,0 sondern hat
+               einen Rand. Der Offset ist der halbe Rest der Folienbreite/-höhe
+               geteilt durch die Rastereinheit.
+               Berechnung komplett in Points um Rundungsfehler zu vermeiden. */
             var gPt = c2p(gridUnitCm);
-            var off = getGridOffsets(ps.slideWidth, ps.slideHeight);
-            var offsetX = off.x;
-            var offsetY = off.y;
+            var offsetX = (ps.slideWidth  % gPt) / 2;
+            var offsetY = (ps.slideHeight % gPt) / 2;
 
             for (var i = 0; i < items.length; i++) {
                 var s = items[i];
@@ -392,8 +367,8 @@ function snap(mode) {
 
             return ctx.sync().then(function () {
                 var l = mode === "both" ? "Pos+Size" : mode === "position" ? "Position" : "Größe";
-                showStatus(l + " → " + off.name + " ✓ (X:" + p2c(offsetX).toFixed(2) +
-                    " Y:" + p2c(offsetY).toFixed(2) + " cm)", "success");
+                showStatus(l + " → Raster ✓ (Offset X:" + p2c(offsetX).toFixed(3) +
+                    " Y:" + p2c(offsetY).toFixed(3) + " cm)", "success");
             });
         });
     }).catch(function (e) {
@@ -440,11 +415,10 @@ function spacing(dir) {
             var sp = c2p(gridUnitCm);
             var tol = getTol();
 
-            /* Raster-Offset (Lookup) */
+            /* Raster-Offset berechnen (wie in snap) – komplett in Points */
             var gPt = c2p(gridUnitCm);
-            var off = getGridOffsets(ps.slideWidth, ps.slideHeight);
-            var offsetX = off.x;
-            var offsetY = off.y;
+            var offsetX = (ps.slideWidth  % gPt) / 2;
+            var offsetY = (ps.slideHeight % gPt) / 2;
 
             /* Schritt 2: Lokale Kopie der Daten erstellen */
             var data = [];
@@ -695,16 +669,18 @@ function buildTbl(ctx, slide, cols, rows, cwRE, chRE) {
 /* ══════════════════════════════════════════════════════════════
    PAPIERFORMAT – 27,728 × 19,297 cm
    ══════════════════════════════════════════════════════════════ */
-function detectFormat() {
+function setSlideSize() {
     PowerPoint.run(function (ctx) {
         var ps = ctx.presentation.pageSetup;
         ps.load(["slideWidth", "slideHeight"]);
         return ctx.sync().then(function () {
-            var off = getGridOffsets(ps.slideWidth, ps.slideHeight);
-            showStatus("Erkannt: " + off.name + " | " +
-                (ps.slideWidth/28.3465).toFixed(2) + " × " +
-                (ps.slideHeight/28.3465).toFixed(2) + " cm (" +
-                ps.slideWidth.toFixed(1) + " × " + ps.slideHeight.toFixed(1) + " pt)", "success");
+            ps.slideWidth = 786;
+            return ctx.sync();
+        }).then(function () {
+            ps.slideHeight = 547;
+            return ctx.sync();
+        }).then(function () {
+            showStatus("Format: 27,728 × 19,297 cm ✓", "success");
         });
     }).catch(function (e) { showStatus("Fehler: " + e.message, "error"); });
 }
@@ -734,40 +710,26 @@ function toggleGuides() {
 }
 
 function addGuides(ctx, masters) {
-    var hLines = [
+    var lines = [
+        { t: "v", p: 8 }, { t: "v", p: 126 },
         { t: "h", p: 5 }, { t: "h", p: 9 }, { t: "h", p: 15 }, { t: "h", p: 17 }, { t: "h", p: 86 }
     ];
     var ps = ctx.presentation.pageSetup;
     ps.load(["slideWidth", "slideHeight"]);
     return ctx.sync().then(function () {
         var sw = ps.slideWidth, sh = ps.slideHeight;
-        var off = getGridOffsets(sw, sh);
-        var offXcm = off.name !== "Unbekannt" ? p2c(off.x) : 0;
-        var vLeftCm = offXcm + 7 * gridUnitCm;
-        var slideWcm = p2c(sw);
-        var vRightCm = slideWcm - offXcm - 6 * gridUnitCm;
-        var vLeftPt = c2p(vLeftCm);
-        var vRightPt = c2p(vRightCm);
-        var vLeftRE = Math.round(vLeftCm / gridUnitCm);
-        var vRightRE = Math.round(vRightCm / gridUnitCm);
         masters.forEach(function (master) {
-            var s1 = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
-            s1.left = vLeftPt; s1.top = 0; s1.width = 1; s1.height = sh;
-            s1.name = GTAG + "_v_L7"; s1.fill.setSolidColor("FF0000"); s1.lineFormat.visible = false;
-            var s2 = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
-            s2.left = vRightPt; s2.top = 0; s2.width = 1; s2.height = sh;
-            s2.name = GTAG + "_v_R6"; s2.fill.setSolidColor("FF0000"); s2.lineFormat.visible = false;
-            hLines.forEach(function (l) {
+            lines.forEach(function (l) {
                 var pt = Math.round(c2p(l.p * gridUnitCm));
                 var s = master.shapes.addGeometricShape(PowerPoint.GeometricShapeType.rectangle);
-                s.left = 0; s.top = pt; s.width = sw; s.height = 1;
+                if (l.t === "v") { s.left = pt; s.top = 0; s.width = 1; s.height = sh; }
+                else             { s.left = 0; s.top = pt; s.width = sw; s.height = 1; }
                 s.name = GTAG + "_" + l.t + "_" + l.p;
-                s.fill.setSolidColor("FF0000"); s.lineFormat.visible = false;
+                s.fill.setSolidColor("FF0000");
+                s.lineFormat.visible = false;
             });
         });
-        return ctx.sync().then(function () {
-            showStatus("Hilfslinien ein ✓ (" + off.name + " | V: " + vLeftRE + ", " + vRightRE + " RE)", "success");
-        });
+        return ctx.sync().then(function () { showStatus("Hilfslinien ein ✓", "success"); });
     });
 }
 
@@ -800,36 +762,3 @@ function copyShadowText() {
         }).catch(function () { showStatus("Kopieren fehlgeschlagen", "error"); });
     } else { showStatus("Zwischenablage nicht verfügbar", "error"); }
 }
-
-/* ═══════════════════════════════════════════════════════════════
-   VBA Grid-Raster kopieren (Mac-kompatibel)
-   ═══════════════════════════════════════════════════════════════ */
-function copyVBA(pts) {
-    var cmVal = (pts * 2.54 / 72).toFixed(4);
-    var q = String.fromCharCode(34);
-    var lines = [
-        "Sub SetGrid_" + Math.round(pts) + "pt()",
-        "    ' Setzt PowerPoint-Raster auf exakt " + pts + " pt (" + cmVal + " cm)",
-        "    ' Mac- und Windows-kompatibel",
-        "    On Error Resume Next",
-        "    With ActivePresentation",
-        "        .GridDistance = " + pts,
-        "        .SnapToGrid = msoTrue",
-        "    End With",
-        "    Application.DisplayGridLines = msoTrue",
-        "    If Err.Number <> 0 Then",
-        "        Err.Clear",
-        "        MsgBox " + q + "GridDistance konnte nicht gesetzt werden." + q + ", vbExclamation",
-        "        Exit Sub",
-        "    End If",
-        "    MsgBox " + q + "Raster gesetzt auf " + pts + " pt (" + cmVal + " cm)" + q + ", vbInformation",
-        "End Sub"
-    ];
-    var txt = lines.join(String.fromCharCode(13, 10));
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(txt).then(function () {
-            showStatus("VBA-Macro kopiert (" + pts + " pt = " + cmVal + " cm) \u2713", "success");
-        }).catch(function () { showStatus("Kopieren fehlgeschlagen", "error"); });
-    } else { showStatus("Zwischenablage nicht verf\u00fcgbar", "error"); }
-}
-
