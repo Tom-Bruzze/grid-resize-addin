@@ -14,12 +14,12 @@ var GTAG = "DROEGE_GUIDELINE";
 Office.onReady(function (info) {
     if (info.host === Office.HostType.PowerPoint) {
         if (Office.context.requirements && Office.context.requirements.isSetSupported) {
-            apiOk = Office.context.requirements.isSetSupported("PowerPointApi", "1.5");
+            apiOk = Office.context.requirements.isSetSupported("PowerPointApi", "1.10");
         } else {
             apiOk = (typeof PowerPoint !== "undefined" && PowerPoint.run && typeof PowerPoint.run === "function");
         }
         initUI();
-        if (!apiOk) showStatus("PowerPointApi 1.5 nicht verfügbar", "warning");
+        if (!apiOk) showStatus("PowerPointApi 1.10 nicht verfügbar", "warning");
     }
 });
 
@@ -137,7 +137,7 @@ function getTol() {
 }
 
 function withShapes(min, cb) {
-    if (!apiOk) { showStatus("PowerPointApi 1.5 nötig", "error"); return; }
+    if (!apiOk) { showStatus("PowerPointApi 1.10 nötig", "error"); return; }
     PowerPoint.run(function (ctx) {
         var shapes = ctx.presentation.getSelectedShapes();
         shapes.load("items");
@@ -319,7 +319,7 @@ function propResize(deltaCm) {
    SNAP TO GRID
    ══════════════════════════════════════════════════════════════ */
 function snap(mode) {
-    if (!apiOk) { showStatus("PowerPointApi 1.5 nötig", "error"); return; }
+    if (!apiOk) { showStatus("PowerPointApi 1.10 nötig", "error"); return; }
 
     PowerPoint.run(function (ctx) {
         var sel = ctx.presentation.getSelectedShapes();
@@ -387,7 +387,7 @@ function snap(mode) {
    - Kein verschachteltes ctx.sync() / return-Problem mehr.
    ══════════════════════════════════════════════════════════════ */
 function spacing(dir) {
-    if (!apiOk) { showStatus("PowerPointApi 1.5 nötig", "error"); return; }
+    if (!apiOk) { showStatus("PowerPointApi 1.10 nötig", "error"); return; }
 
     PowerPoint.run(function (ctx) {
         var sel = ctx.presentation.getSelectedShapes();
